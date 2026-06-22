@@ -18,9 +18,9 @@ export async function createTask(data: TaskInput) {
   try {
     const creator = await checkUser();
     
-    // Prevent non-admins from creating tasks
-    if (creator.role !== 'ADMIN') {
-      return { error: 'Unauthorized. Only admins can create and assign tasks.' };
+    // Prevent non-admins from assigning tasks to other people
+    if (creator.role !== 'ADMIN' && data.assignedToId !== creator.id) {
+      return { error: 'Unauthorized. Employees can only create and assign tasks to themselves.' };
     }
 
     const parsed = taskSchema.safeParse(data);
@@ -36,7 +36,7 @@ export async function createTask(data: TaskInput) {
         description: val.description,
         priority: val.priority,
         status: val.status,
-        assignedById: creator.id,
+        assignedById: val.assignedById || creator.id,
         assignedToId: val.assignedToId,
         dueDate: val.dueDate ? new Date(val.dueDate) : null,
       },
@@ -45,7 +45,9 @@ export async function createTask(data: TaskInput) {
     // Create activity log
     await db.activityLog.create({
       data: {
-        action: `Created task: ${val.title} and assigned it`,
+        action: creator.id === val.assignedToId
+          ? `Self-assigned task: ${val.title}`
+          : `Created task: ${val.title} and assigned it`,
         entityType: 'Task',
         entityId: task.id,
         performedBy: `${creator.firstName} ${creator.lastName}`,
@@ -55,14 +57,17 @@ export async function createTask(data: TaskInput) {
     // Send notifications to the assigned employee
     await db.notification.create({
       data: {
-        title: 'New Task Assigned',
-        message: `You have been assigned a new task: "${val.title}" with priority ${val.priority}.`,
+        title: creator.id === val.assignedToId ? 'Self-Assigned Task Created' : 'New Task Assigned',
+        message: creator.id === val.assignedToId
+          ? `You self-assigned a new task: "${val.title}" with priority ${val.priority}.`
+          : `You have been assigned a new task: "${val.title}" with priority ${val.priority}.`,
         userId: val.assignedToId,
       },
     });
 
     revalidatePath('/admin/tasks');
     revalidatePath('/employee/tasks');
+    revalidatePath('/employee/task-list');
     return { success: true, task };
   } catch (error: any) {
     return { error: error.message || 'Failed to create task.' };

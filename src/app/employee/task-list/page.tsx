@@ -38,5 +38,20 @@ export default async function EmployeeTaskListPage() {
     updatedAt: new Date(task.updatedAt),
   }));
 
-  return <EmployeeTaskListClient initialTasks={serializedTasks as any} />;
+  const admins = await db.user.findMany({
+    where: {
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+    },
+    orderBy: {
+      firstName: 'asc',
+    },
+  });
+
+  return <EmployeeTaskListClient initialTasks={serializedTasks as any} currentUser={session.user} admins={admins} />;
 }

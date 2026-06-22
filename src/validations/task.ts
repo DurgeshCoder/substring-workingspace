@@ -6,7 +6,9 @@ export const taskSchema = z.object({
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   status: z.enum(['TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED', 'CANCELLED']).default('TODO'),
   assignedToId: z.string().min(1, 'Please assign this task to an employee'),
+  assignedById: z.string().optional().nullable(),
   dueDate: z.string().optional().nullable().or(z.date()),
 });
 
 export type TaskInput = z.infer<typeof taskSchema>;
+

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { updateTaskStatus, getComments, createComment } from '@/actions/tasks';
+import { updateTaskStatus, getComments, createComment, createTask } from '@/actions/tasks';
 import { 
   CheckSquare, 
   Calendar, 
@@ -14,7 +14,8 @@ import {
   Eye,
   Clock,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  Plus
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -24,6 +25,15 @@ import type { Priority, TaskStatus } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { taskSchema } from '@/validations/task';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Calendar as ShadcnCalendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface TaskWithAssigner {
   id: string;
@@ -45,12 +55,18 @@ interface TaskWithAssigner {
 
 interface TasksClientProps {
   initialTasks: TaskWithAssigner[];
+  currentUser: any;
+  admins: { id: string; firstName: string; lastName: string }[];
 }
 
-export default function EmployeeTasksClient({ initialTasks }: TasksClientProps) {
+export default function EmployeeTasksClient({ initialTasks, currentUser, admins }: TasksClientProps) {
   const [selectedTask, setSelectedTask] = useState<TaskWithAssigner | null>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [draggedOverCol, setDraggedOverCol] = useState<TaskStatus | null>(null);
+  
+  // Form modal state variables
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   
   // Comment section state variables
   const [comments, setComments] = useState<any[]>([]);
@@ -59,6 +75,51 @@ export default function EmployeeTasksClient({ initialTasks }: TasksClientProps) 
   const [isLoadingComments, setIsLoadingComments] = useState(false);
 
   const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<any>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      priority: 'MEDIUM',
+      status: 'TODO',
+      assignedToId: currentUser?.id || '',
+      assignedById: '',
+      dueDate: '',
+    },
+  });
+
+  const onSubmit = async (data: any) => {
+    if (!data.assignedById) {
+      toast.error('Please select an admin who assigned this task.');
+      return;
+    }
+    setIsCreating(true);
+    try {
+      const res = await createTask({
+        ...data,
+        assignedToId: currentUser.id,
+      });
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success('Task created and assigned to self!');
+        setIsFormOpen(false);
+        reset();
+        router.refresh();
+      }
+    } catch (err) {
+      toast.error('Failed to create task.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   // Filter completed tasks to show only the 10 most recent
   const boardTasks = React.useMemo(() => {
@@ -194,11 +255,20 @@ export default function EmployeeTasksClient({ initialTasks }: TasksClientProps) 
     <div className="space-y-6 animate-in fade-in duration-350">
       
       {/* Header section */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Task Board</h1>
-        <p className="text-xs text-muted-foreground">
-          Manage your task pipeline. Drag & drop cards between columns or click to view details.
-        </p>
+      <div className="flex flex-row items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Task Board</h1>
+          <p className="text-xs text-muted-foreground">
+            Manage your task pipeline. Drag & drop cards between columns or click to view details.
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsFormOpen(true)}
+          className="bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 h-9 px-4 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Task</span>
+        </Button>
       </div>
 
       {/* Kanban Board Grid */}
@@ -454,6 +524,150 @@ export default function EmployeeTasksClient({ initialTasks }: TasksClientProps) 
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Create Task Modal */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        title="Add Task to Self"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs text-foreground">
+          <div className="space-y-1.5">
+            <Label className="font-semibold text-foreground uppercase tracking-wider">Task Title</Label>
+            <Input
+              {...register('title')}
+              type="text"
+              placeholder="e.g. Work on my presentation slide deck"
+              disabled={isCreating}
+              className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150"
+            />
+            {errors.title && <p className="text-rose-400 mt-0.5">{errors.title.message as string}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="font-semibold text-foreground uppercase tracking-wider">Description</Label>
+            <Textarea
+              {...register('description')}
+              rows={3}
+              placeholder="Detail what needs to be done..."
+              disabled={isCreating}
+              className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Priority</Label>
+              <select
+                {...register('priority')}
+                disabled={isCreating}
+                className="flex h-8 w-full rounded-lg border border-border bg-background/80 px-3 py-1 text-foreground focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
+              >
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="URGENT">URGENT</option>
+              </select>
+            </div>
+            
+            <div className="space-y-1.5 flex flex-col justify-end">
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Due Date</Label>
+              <Controller
+                control={control}
+                name="dueDate"
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isCreating}
+                        className={cn(
+                          "w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-left font-normal text-xs h-8 justify-start text-foreground",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-3.5 w-3.5" />
+                        {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-card border border-border" align="start">
+                      <ShadcnCalendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? date.toISOString() : '')}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Assigned By</Label>
+              <select
+                {...register('assignedById')}
+                disabled={isCreating}
+                className="flex h-8 w-full rounded-lg border border-border bg-background/80 px-3 py-1 text-foreground focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
+              >
+                <option value="">Select Admin</option>
+                {admins.map(admin => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.firstName} {admin.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Assigned To</Label>
+              <Input
+                type="text"
+                disabled
+                value={`${currentUser?.firstName || ''} ${currentUser?.lastName || ''} (Self)`}
+                className="w-full bg-muted border border-border rounded-xl py-2 px-3 text-muted-foreground text-xs"
+              />
+            </div>
+          </div>
+
+          <Separator className="bg-muted/80 my-2" />
+
+          <div className="flex justify-end space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFormOpen(false)}
+              disabled={isCreating}
+              className="rounded-xl font-semibold transition duration-150 text-foreground"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isCreating}
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <span>Create Task</span>
+              )}
+            </Button>
+          </div>
+        </form>
       </Modal>
 
     </div>
