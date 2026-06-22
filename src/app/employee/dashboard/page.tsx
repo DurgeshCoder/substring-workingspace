@@ -38,16 +38,19 @@ export default async function EmployeeDashboardPage() {
   });
 
   // Recent logs related to employee tasks or items updated
-  const recentLogs = await db.activityLog.findMany({
-    where: {
-      OR: [
-        { action: { contains: session.user.firstName } },
-        { action: { contains: session.user.lastName } },
-      ]
-    },
+  // Fetch latest logs and filter in memory to avoid MySQL collation mix issues with "contains" (LIKE operator)
+  const allLogs = await db.activityLog.findMany({
     orderBy: { createdAt: 'desc' },
-    take: 5,
+    take: 100,
   });
+
+  const userFirstName = session.user.firstName.toLowerCase();
+  const userLastName = session.user.lastName.toLowerCase();
+
+  const recentLogs = allLogs.filter(log => {
+    const actionLower = log.action.toLowerCase();
+    return actionLower.includes(userFirstName) || actionLower.includes(userLastName);
+  }).slice(0, 5);
 
   const stats = [
     { name: 'Assigned Tasks (To Do)', value: todoCount.toString(), icon: CheckSquare, color: 'from-indigo-500 to-blue-500', subtitle: 'Ready to start' },
