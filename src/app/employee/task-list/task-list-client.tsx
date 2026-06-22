@@ -23,7 +23,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/modal';
 import { useRouter } from 'next/navigation';
-import { Priority, TaskStatus } from '@prisma/client';
+import type { Priority, TaskStatus } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
