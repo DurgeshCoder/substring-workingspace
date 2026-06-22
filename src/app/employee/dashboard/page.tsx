@@ -1,7 +1,7 @@
-'use client';
-
 import React from 'react';
-import { useSession } from 'next-auth/react';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import { db } from '@/lib/db';
 import { 
   CheckSquare, 
   Clock, 
@@ -11,20 +11,48 @@ import {
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
 
-export default function EmployeeDashboardPage() {
-  const { data: session } = useSession();
+export const dynamic = 'force-dynamic';
 
-  const userDisplayName = session?.user 
-    ? `${session.user.firstName} ${session.user.lastName}` 
-    : 'Team Member';
+export default async function EmployeeDashboardPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect('/login');
+  }
 
-  const designation = session?.user?.designation || 'Software Engineer';
+  const userDisplayName = `${session.user.firstName} ${session.user.lastName}`;
+  const designation = session.user.designation || 'Software Engineer';
+
+  // Fetch real-time statistics from DB
+  const todoCount = await db.task.count({
+    where: { assignedToId: session.user.id, status: 'TODO' }
+  });
+
+  const inProgressCount = await db.task.count({
+    where: { assignedToId: session.user.id, status: 'IN_PROGRESS' }
+  });
+
+  const completedCount = await db.task.count({
+    where: { assignedToId: session.user.id, status: 'COMPLETED' }
+  });
+
+  // Recent logs related to employee tasks or items updated
+  const recentLogs = await db.activityLog.findMany({
+    where: {
+      OR: [
+        { action: { contains: session.user.firstName } },
+        { action: { contains: session.user.lastName } },
+      ]
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  });
 
   const stats = [
-    { name: 'Assigned Tasks', value: '0', icon: CheckSquare, color: 'from-indigo-500 to-blue-500', subtitle: 'Ready to start' },
-    { name: 'In Progress', value: '0', icon: Clock, color: 'from-amber-500 to-orange-500', subtitle: 'Work underway' },
-    { name: 'Completed Tasks', value: '0', icon: Award, color: 'from-emerald-500 to-teal-500', subtitle: 'Tasks finalized' },
+    { name: 'Assigned Tasks (To Do)', value: todoCount.toString(), icon: CheckSquare, color: 'from-indigo-500 to-blue-500', subtitle: 'Ready to start' },
+    { name: 'In Progress', value: inProgressCount.toString(), icon: Clock, color: 'from-amber-500 to-orange-500', subtitle: 'Work underway' },
+    { name: 'Completed Tasks', value: completedCount.toString(), icon: Award, color: 'from-emerald-500 to-teal-500', subtitle: 'Tasks finalized' },
   ];
 
   return (
@@ -42,7 +70,7 @@ export default function EmployeeDashboardPage() {
         </div>
         <div className="flex items-center space-x-3 bg-slate-950/50 border border-slate-800/80 px-4 py-2.5 rounded-xl text-xs font-semibold text-fuchsia-400">
           <AlertCircle className="w-4 h-4" />
-          <span>No urgent deadlines today</span>
+          <span>Keep pushing forward!</span>
         </div>
       </div>
 
@@ -106,21 +134,28 @@ export default function EmployeeDashboardPage() {
         <div className="lg:col-span-2 bg-slate-900 border border-slate-800/80 rounded-2xl p-6 space-y-4 shadow-md">
           <div className="flex justify-between items-center">
             <div className="space-y-0.5">
-              <h3 className="text-lg font-bold text-white">Recent Activities</h3>
+              <h3 className="text-lg font-bold text-white">Your Recent Activities</h3>
               <p className="text-xs text-slate-400">
-                A log of updates in your projects.
+                A log of updates relating to your tasks.
               </p>
             </div>
           </div>
           
           <div className="space-y-3.5">
-            <div className="flex items-start space-x-3.5 p-3.5 bg-slate-950/20 border border-slate-800/50 rounded-xl text-xs text-slate-400">
-              <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-500 mt-1" />
-              <div className="flex-1 space-y-0.5">
-                <p className="font-semibold text-slate-300">Welcome to your dashboard</p>
-                <p className="text-[10px] text-slate-500">System • Just now</p>
+            {recentLogs.map((log) => (
+              <div key={log.id} className="flex items-start space-x-3.5 p-3.5 bg-slate-950/20 border border-slate-800/50 rounded-xl text-xs text-slate-400">
+                <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-500 mt-1 shrink-0" />
+                <div className="flex-1 space-y-0.5">
+                  <p className="font-semibold text-slate-300">{log.action}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {log.performedBy} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                  </p>
+                </div>
               </div>
-            </div>
+            ))}
+            {recentLogs.length === 0 && (
+              <p className="text-xs text-slate-500 text-center py-4">No recent task logs found.</p>
+            )}
           </div>
         </div>
 

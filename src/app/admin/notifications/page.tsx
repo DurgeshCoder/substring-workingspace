@@ -1,23 +1,31 @@
 import React from 'react';
-import { Bell } from 'lucide-react';
+import { db } from '@/lib/db';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import NotificationsClient from '@/components/notifications-client';
 
-export default function AdminNotificationsPage() {
-  return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Notifications</h1>
-        <p className="text-xs text-slate-400">
-          Manage system alerts and updates.
-        </p>
-      </div>
+export const dynamic = 'force-dynamic';
 
-      <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-16 text-center text-slate-400 space-y-3 shadow-md">
-        <Bell className="w-10 h-10 text-slate-700 mx-auto" />
-        <p className="text-sm font-semibold">No notifications</p>
-        <p className="text-xs text-slate-500 max-w-xs mx-auto">
-          You are all caught up. We'll alert you here when new events occur.
-        </p>
-      </div>
-    </div>
-  );
+export default async function AdminNotificationsPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect('/login');
+  }
+
+  const notifications = await db.notification.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  // Serialize Date objects for Client Component hydration
+  const serializedNotifications = notifications.map(n => ({
+    ...n,
+    createdAt: new Date(n.createdAt),
+  }));
+
+  return <NotificationsClient notifications={serializedNotifications as any} />;
 }

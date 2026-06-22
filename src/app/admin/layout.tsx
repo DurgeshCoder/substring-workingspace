@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
@@ -18,12 +18,36 @@ import {
   Shield,
   ChevronDown
 } from 'lucide-react';
+import { getUnreadCount } from '@/actions/notifications';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await getUnreadCount();
+        if (res.success && typeof res.count === 'number') {
+          setUnreadCount(res.count);
+        }
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Poll every 10 seconds for new notifications
+    const interval = setInterval(fetchUnreadCount, 10000);
+
+    return () => clearInterval(interval);
+  }, [pathname, session]);
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -97,7 +121,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <item.icon className={`w-5 h-5 transition-colors ${
                   isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-200'
                 }`} />
-                <span>{item.name}</span>
+                <span className="flex-1">{item.name}</span>
+                {item.name === 'Notifications' && unreadCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white animate-pulse shadow-md shadow-rose-500/25">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}

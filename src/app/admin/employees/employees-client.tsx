@@ -20,6 +20,11 @@ import {
 import { toast } from 'sonner';
 import Modal from '@/components/ui/modal';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 interface UserWithDept {
   id: string;
@@ -319,24 +324,24 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">First Name</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">First Name</Label>
+              <Input
                 {...register('firstName')}
                 type="text"
                 placeholder="John"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
               {errors.firstName && <p className="text-rose-400 mt-0.5">{errors.firstName.message as string}</p>}
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Last Name</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Last Name</Label>
+              <Input
                 {...register('lastName')}
                 type="text"
                 placeholder="Doe"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
               {errors.lastName && <p className="text-rose-400 mt-0.5">{errors.lastName.message as string}</p>}
             </div>
@@ -344,26 +349,26 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Email Address</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Email Address</Label>
+              <Input
                 {...register('email')}
                 type="email"
                 placeholder="john.doe@company.com"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
               {errors.email && <p className="text-rose-400 mt-0.5">{errors.email.message as string}</p>}
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">
                 Password {editingEmp && <span className="text-[10px] text-slate-500">(Leave blank to keep current)</span>}
-              </label>
-              <input
+              </Label>
+              <Input
                 {...register('password')}
                 type="password"
                 placeholder={editingEmp ? "••••••••" : "admin123"}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
               {errors.password && <p className="text-rose-400 mt-0.5">{errors.password.message as string}</p>}
             </div>
@@ -371,21 +376,21 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Phone</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Phone</Label>
+              <Input
                 {...register('phone')}
                 type="text"
                 placeholder="+1 555 1234"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Department</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Department</Label>
               <select
                 {...register('departmentId')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="">Unassigned</option>
                 {departments.map(d => (
@@ -397,34 +402,34 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Designation</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Designation</Label>
+              <Input
                 {...register('designation')}
                 type="text"
                 placeholder="Software Engineer"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Salary</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Salary</Label>
+              <Input
                 {...register('salary')}
                 type="number"
                 placeholder="80000"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Gender</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Gender</Label>
               <select
                 {...register('gender')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -432,22 +437,22 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">System Role</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">System Role</Label>
               <select
                 {...register('role')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="EMPLOYEE">Employee</option>
                 <option value="ADMIN">Administrator</option>
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Status</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Status</Label>
               <select
                 {...register('status')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
@@ -456,29 +461,34 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-semibold text-slate-300 uppercase tracking-wider">Home Address</label>
-            <textarea
+            <Label className="font-semibold text-slate-300 uppercase tracking-wider">Home Address</Label>
+            <Textarea
               {...register('address')}
               rows={2}
               placeholder="Full street name, state, and zip code"
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-2 border-t border-slate-800/80">
-            <button
+          <Separator className="bg-slate-800/80 my-2" />
+
+          <div className="flex justify-end space-x-3">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl transition duration-150"
+              className="rounded-xl font-semibold transition duration-150 text-slate-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={isLoading}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-600 hover:to-fuchsia-600 text-white font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -488,7 +498,7 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
               ) : (
                 <span>{editingEmp ? 'Update' : 'Register'}</span>
               )}
-            </button>
+            </Button>
           </div>
 
         </form>
@@ -510,26 +520,31 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
           <p className="text-xs text-slate-300">
             Are you sure you want to proceed with deleting this record?
           </p>
-          <div className="flex justify-end space-x-3 pt-2 border-t border-slate-800/80">
-            <button
+          <Separator className="bg-slate-800/80 my-2" />
+          <div className="flex justify-end space-x-3">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setDeletingEmp(null)}
               disabled={isLoading}
-              className="px-4 py-2 bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-xl transition duration-150"
+              className="rounded-xl text-xs font-semibold text-slate-200 transition duration-150"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleDelete}
+              variant="destructive"
+              size="sm"
               disabled={isLoading}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
+              className="inline-flex items-center space-x-2 text-white text-xs font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <span>Confirm Delete</span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

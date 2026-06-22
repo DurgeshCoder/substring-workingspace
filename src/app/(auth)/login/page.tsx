@@ -9,6 +9,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -116,19 +119,19 @@ function LoginForm() {
           
           {/* Email input field */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
               Email Address
-            </label>
+            </Label>
             <div className="relative group">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
                 <Mail className="w-5 h-5" />
               </span>
-              <input
+              <Input
                 {...register('email')}
                 type="email"
                 disabled={isLoading}
                 placeholder="you@company.com"
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-11 bg-slate-950/80 border-slate-800 rounded-xl pl-10 pr-4 text-slate-200 placeholder-slate-550 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
               />
             </div>
             {errors.email && (
@@ -141,9 +144,9 @@ function LoginForm() {
           {/* Password input field */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
                 Password
-              </label>
+              </Label>
               <a 
                 href="#" 
                 onClick={(e) => {
@@ -159,12 +162,12 @@ function LoginForm() {
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 group-focus-within:text-indigo-400 transition-colors">
                 <Lock className="w-5 h-5" />
               </span>
-              <input
+              <Input
                 {...register('password')}
                 type={showPassword ? 'text' : 'password'}
                 disabled={isLoading}
                 placeholder="••••••••"
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-3 pl-10 pr-10 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-11 bg-slate-950/80 border-slate-800 rounded-xl pl-10 pr-10 text-slate-200 placeholder-slate-550 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
               />
               <button
                 type="button"
@@ -182,10 +185,10 @@ function LoginForm() {
           </div>
 
           {/* Submit Button */}
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
-            className="relative w-full group py-3 px-4 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-600 hover:to-fuchsia-600 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all duration-150 disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100 mt-2"
+            className="w-full h-11 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all duration-150 mt-2 cursor-pointer"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
@@ -195,7 +198,7 @@ function LoginForm() {
             ) : (
               'Sign In'
             )}
-          </button>
+          </Button>
 
         </form>
 

@@ -22,6 +22,11 @@ import { toast } from 'sonner';
 import Modal from '@/components/ui/modal';
 import { useRouter } from 'next/navigation';
 import { Priority, TaskStatus } from '@prisma/client';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 interface TaskWithRelations {
   id: string;
@@ -63,6 +68,8 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
   const [deletingTask, setDeletingTask] = useState<TaskWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [filterEmployee, setFilterEmployee] = useState<string>('ALL');
+  const [filterDate, setFilterDate] = useState<string>('ALL');
   const router = useRouter();
 
   const {
@@ -195,9 +202,47 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
     }
   };
 
-  const filteredTasks = initialTasks.filter(task => 
-    filterStatus === 'ALL' ? true : task.status === filterStatus
-  );
+  const filteredTasks = initialTasks.filter(task => {
+    // 1. Status Filter
+    if (filterStatus !== 'ALL' && task.status !== filterStatus) {
+      return false;
+    }
+    
+    // 2. Employee Filter
+    if (filterEmployee !== 'ALL' && task.assignedToId !== filterEmployee) {
+      return false;
+    }
+
+    // 3. Date Filter
+    if (filterDate !== 'ALL') {
+      if (!task.dueDate) {
+        return false;
+      }
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dueDate = new Date(task.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+
+      if (filterDate === 'TODAY') {
+        if (dueDate.getTime() !== today.getTime()) {
+          return false;
+        }
+      } else if (filterDate === 'THIS_WEEK') {
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
+        if (dueDate < today || dueDate > nextWeek) {
+          return false;
+        }
+      } else if (filterDate === 'OVERDUE') {
+        if (dueDate >= today || task.status === 'COMPLETED' || task.status === 'CANCELLED') {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -212,32 +257,70 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         </div>
         <button 
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-600 hover:to-fuchsia-600 text-white rounded-xl shadow-lg shadow-indigo-500/10 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer"
+          className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-600 hover:to-fuchsia-600 text-white rounded-xl shadow-lg shadow-indigo-500/10 text-xs font-semibold active:scale-[0.98] transition-all cursor-pointer font-bold"
         >
           <Plus className="w-4 h-4" />
           <span>Create Task</span>
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4 text-xs font-semibold">
-        <span className="text-slate-500 flex items-center gap-1.5 mr-2">
-          <ListFilter className="w-4 h-4" />
-          <span>Filter Status:</span>
-        </span>
-        {['ALL', 'TODO', 'IN_PROGRESS', 'REVIEW', 'COMPLETED', 'CANCELLED'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer border ${
-              filterStatus === status
-                ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {status}
-          </button>
-        ))}
+      {/* Filter Control Card */}
+      <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-md">
+        <div className="flex items-center space-x-2 text-xs font-bold text-slate-350 border-b border-slate-800/80 pb-3">
+          <ListFilter className="w-4 h-4 text-indigo-400" />
+          <span>Filter Tasks</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Status Select */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full text-xs bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-slate-300 focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="TODO">TODO</option>
+              <option value="IN_PROGRESS">IN PROGRESS</option>
+              <option value="REVIEW">REVIEW</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+
+          {/* Employee Select */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Assigned Employee</label>
+            <select
+              value={filterEmployee}
+              onChange={(e) => setFilterEmployee(e.target.value)}
+              className="w-full text-xs bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-slate-300 focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
+            >
+              <option value="ALL">All Employees</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.firstName} {emp.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date Select */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Due Date</label>
+            <select
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="w-full text-xs bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-slate-300 focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
+            >
+              <option value="ALL">Any Due Date</option>
+              <option value="TODAY">Due Today</option>
+              <option value="THIS_WEEK">Due This Week (Next 7 Days)</option>
+              <option value="OVERDUE">Overdue (Incomplete)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Tasks listing area */}
@@ -340,35 +423,35 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
           
           <div className="space-y-1.5">
-            <label className="font-semibold text-slate-300 uppercase tracking-wider">Task Title</label>
-            <input
+            <Label className="font-semibold text-slate-300 uppercase tracking-wider">Task Title</Label>
+            <Input
               {...register('title')}
               type="text"
               placeholder="e.g. Implement API route validations"
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
             />
             {errors.title && <p className="text-rose-400 mt-0.5">{errors.title.message as string}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-semibold text-slate-300 uppercase tracking-wider">Description</label>
-            <textarea
+            <Label className="font-semibold text-slate-300 uppercase tracking-wider">Description</Label>
+            <Textarea
               {...register('description')}
               rows={3}
               placeholder="Detail the work requirements, links, or context for this assignment..."
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Assignee</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Assignee</Label>
               <select
                 {...register('assignedToId')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="">Select Employee</option>
                 {employees.map(e => (
@@ -379,23 +462,23 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             </div>
             
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Due Date</label>
-              <input
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Due Date</Label>
+              <Input
                 {...register('dueDate')}
                 type="date"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150 text-xs"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Priority</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Priority</Label>
               <select
                 {...register('priority')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -405,11 +488,11 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             </div>
             
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider">Status</label>
+              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Status</Label>
               <select
                 {...register('status')}
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 px-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition duration-150"
+                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="TODO">TODO</option>
                 <option value="IN_PROGRESS">IN PROGRESS</option>
@@ -420,19 +503,24 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-2 border-t border-slate-800/80">
-            <button
+          <Separator className="bg-slate-800/80 my-2" />
+
+          <div className="flex justify-end space-x-3">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl transition duration-150"
+              className="rounded-xl font-semibold transition duration-150 text-slate-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={isLoading}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-600 hover:to-fuchsia-600 text-white font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -442,7 +530,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
               ) : (
                 <span>{editingTask ? 'Update' : 'Create'}</span>
               )}
-            </button>
+            </Button>
           </div>
 
         </form>
@@ -459,26 +547,31 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             Are you sure you want to delete the task <span className="font-bold text-white">"{deletingTask?.title}"</span>? 
             This will permanently remove the task and all associated comments. This action cannot be reversed.
           </p>
-          <div className="flex justify-end space-x-3 pt-2 border-t border-slate-800/80">
-            <button
+          <Separator className="bg-slate-800/80 my-2" />
+          <div className="flex justify-end space-x-3">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setDeletingTask(null)}
               disabled={isLoading}
-              className="px-4 py-2 bg-slate-855 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded-xl transition duration-150"
+              className="rounded-xl text-xs font-semibold text-slate-200 transition duration-150"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleDelete}
+              variant="destructive"
+              size="sm"
               disabled={isLoading}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
+              className="inline-flex items-center space-x-2 text-white text-xs font-semibold rounded-xl shadow-lg transition duration-150 cursor-pointer"
             >
               {isLoading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <span>Delete Task</span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

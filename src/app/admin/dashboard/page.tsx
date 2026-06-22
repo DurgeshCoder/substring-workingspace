@@ -1,7 +1,7 @@
-'use client';
-
 import React from 'react';
-import { useSession } from 'next-auth/react';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import { db } from '@/lib/db';
 import { 
   Users, 
   Building2, 
@@ -12,19 +12,47 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
 
-export default function AdminDashboardPage() {
-  const { data: session } = useSession();
+export const dynamic = 'force-dynamic';
 
-  const userDisplayName = session?.user 
-    ? `${session.user.firstName} ${session.user.lastName}` 
-    : 'Admin';
+export default async function AdminDashboardPage() {
+  const session = await auth();
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    redirect('/login');
+  }
+
+  const userDisplayName = `${session.user.firstName} ${session.user.lastName}`;
+
+  // Fetch real-time statistics from DB
+  const employeeCount = await db.user.count({
+    where: { role: 'EMPLOYEE' }
+  });
+
+  const departmentCount = await db.department.count();
+
+  const activeTasksCount = await db.task.count({
+    where: { status: { notIn: ['COMPLETED', 'CANCELLED'] } }
+  });
+
+  const now = new Date();
+  const overdueCount = await db.task.count({
+    where: {
+      dueDate: { lt: now },
+      status: { notIn: ['COMPLETED', 'CANCELLED'] }
+    }
+  });
+
+  const recentLogs = await db.activityLog.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  });
 
   const stats = [
-    { name: 'Total Employees', value: '2', icon: Users, color: 'from-blue-500 to-indigo-500', pct: '+100% this week' },
-    { name: 'Active Departments', value: '2', icon: Building2, color: 'from-emerald-500 to-teal-500', pct: 'Engineering, HR' },
-    { name: 'Assigned Tasks', value: '0', icon: CheckSquare, color: 'from-amber-500 to-orange-500', pct: '0 pending' },
-    { name: 'Overdue Tasks', value: '0', icon: Clock, color: 'from-rose-500 to-pink-500', pct: '0 critical' },
+    { name: 'Total Employees', value: employeeCount.toString(), icon: Users, color: 'from-blue-500 to-indigo-500', pct: 'Registered active employees' },
+    { name: 'Active Departments', value: departmentCount.toString(), icon: Building2, color: 'from-emerald-500 to-teal-500', pct: 'Configured divisions' },
+    { name: 'Pending Tasks', value: activeTasksCount.toString(), icon: CheckSquare, color: 'from-amber-500 to-orange-500', pct: 'In progress or to do' },
+    { name: 'Overdue Tasks', value: overdueCount.toString(), icon: Clock, color: 'from-rose-500 to-pink-500', pct: 'Require immediate action' },
   ];
 
   return (
@@ -94,14 +122,14 @@ export default function AdminDashboardPage() {
             </Link>
             <Link 
               href="/admin/departments" 
-              className="flex items-center justify-between w-full p-3 bg-slate-950/40 hover:bg-slate-800/40 border border-slate-800 hover:border-slate-700/60 rounded-xl text-xs font-medium text-slate-300 transition-all group"
+              className="flex items-center justify-between w-full p-3 bg-slate-950/40 hover:bg-slate-850/40 border border-slate-800 hover:border-slate-700/60 rounded-xl text-xs font-medium text-slate-300 transition-all group"
             >
               <span>Manage Departments</span>
               <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
             </Link>
             <Link 
               href="/admin/tasks" 
-              className="flex items-center justify-between w-full p-3 bg-slate-950/40 hover:bg-slate-800/40 border border-slate-800 hover:border-slate-700/60 rounded-xl text-xs font-medium text-slate-300 transition-all group"
+              className="flex items-center justify-between w-full p-3 bg-slate-950/40 hover:bg-slate-850/40 border border-slate-800 hover:border-slate-700/60 rounded-xl text-xs font-medium text-slate-300 transition-all group"
             >
               <span>Assign A Task</span>
               <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
@@ -124,20 +152,20 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="space-y-3.5">
-            <div className="flex items-start space-x-3.5 p-3.5 bg-slate-950/20 border border-slate-800/50 rounded-xl text-xs text-slate-400">
-              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 mt-1" />
-              <div className="flex-1 space-y-0.5">
-                <p className="font-semibold text-slate-300">Database initialized & seeded</p>
-                <p className="text-[10px] text-slate-500">System Admin • Just now</p>
+            {recentLogs.map((log) => (
+              <div key={log.id} className="flex items-start space-x-3.5 p-3.5 bg-slate-950/20 border border-slate-800/50 rounded-xl text-xs text-slate-400">
+                <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 mt-1 shrink-0" />
+                <div className="flex-1 space-y-0.5">
+                  <p className="font-semibold text-slate-300">{log.action}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {log.performedBy} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start space-x-3.5 p-3.5 bg-slate-950/20 border border-slate-800/50 rounded-xl text-xs text-slate-400">
-              <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-500 mt-1" />
-              <div className="flex-1 space-y-0.5">
-                <p className="font-semibold text-slate-300">Next.js application initialized successfully</p>
-                <p className="text-[10px] text-slate-500">System Admin • 10 minutes ago</p>
-              </div>
-            </div>
+            ))}
+            {recentLogs.length === 0 && (
+              <p className="text-xs text-slate-500 text-center py-4">No recent activity logs found.</p>
+            )}
           </div>
         </div>
 
