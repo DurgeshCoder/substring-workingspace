@@ -33,25 +33,22 @@ export async function createEmployee(data: CreateEmployeeInput) {
       return { error: 'Email already registered.' };
     }
 
-    // Auto-generate sequential Employee Code (e.g. EMP-003)
-    const lastUser = await db.user.findFirst({
-      orderBy: { employeeCode: 'desc' },
+    // Check if employeeCode exists
+    const existingCode = await db.user.findUnique({
+      where: { employeeCode: val.employeeCode },
     });
-    let nextNum = 1;
-    if (lastUser && lastUser.employeeCode.startsWith('EMP-')) {
-      const numPart = parseInt(lastUser.employeeCode.substring(4));
-      if (!isNaN(numPart)) {
-        nextNum = numPart + 1;
-      }
+
+    if (existingCode) {
+      return { error: 'Employee ID already in use.' };
     }
-    const employeeCode = `EMP-${String(nextNum).padStart(3, '0')}`;
 
     // Hash password
     const hashedPassword = await bcrypt.hash(val.password, 10);
 
     const user = await db.user.create({
       data: {
-        employeeCode,
+        employeeCode: val.employeeCode,
+        joiningDate: new Date(val.joiningDate),
         firstName: val.firstName,
         lastName: val.lastName,
         email: val.email,
@@ -69,7 +66,7 @@ export async function createEmployee(data: CreateEmployeeInput) {
 
     await db.activityLog.create({
       data: {
-        action: `Created employee: ${val.firstName} ${val.lastName} (${employeeCode})`,
+        action: `Created employee: ${val.firstName} ${val.lastName} (${val.employeeCode})`,
         entityType: 'User',
         entityId: user.id,
         performedBy: `${admin.firstName} ${admin.lastName}`,
@@ -105,8 +102,22 @@ export async function updateEmployee(id: string, data: UpdateEmployeeInput) {
       return { error: 'Email already registered to another user.' };
     }
 
+    // Check if employeeCode exists for another user
+    const existingCode = await db.user.findFirst({
+      where: {
+        employeeCode: val.employeeCode,
+        NOT: { id },
+      },
+    });
+
+    if (existingCode) {
+      return { error: 'Employee ID already in use.' };
+    }
+
     // Build update object
     const updateData: any = {
+      employeeCode: val.employeeCode,
+      joiningDate: new Date(val.joiningDate),
       firstName: val.firstName,
       lastName: val.lastName,
       email: val.email,

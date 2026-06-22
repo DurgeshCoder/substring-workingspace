@@ -73,6 +73,8 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
   } = useForm<any>({
     resolver: zodResolver(editingEmp ? updateEmployeeSchema : createEmployeeSchema),
     defaultValues: {
+      employeeCode: '',
+      joiningDate: '',
       firstName: '',
       lastName: '',
       email: '',
@@ -90,7 +92,22 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
 
   const handleOpenAdd = () => {
     setEditingEmp(null);
+
+    // Auto-generate next sequential employee code
+    const codes = initialEmployees
+      .map(emp => emp.employeeCode)
+      .filter(code => code.startsWith('EMP-'))
+      .map(code => {
+        const numPart = parseInt(code.substring(4));
+        return isNaN(numPart) ? 0 : numPart;
+      });
+    const maxNum = codes.length > 0 ? Math.max(...codes) : 0;
+    const nextEmployeeCode = `EMP-${String(maxNum + 1).padStart(3, '0')}`;
+    const todayStr = new Date().toISOString().split('T')[0];
+
     reset({
+      employeeCode: nextEmployeeCode,
+      joiningDate: todayStr,
       firstName: '',
       lastName: '',
       email: '',
@@ -110,6 +127,8 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
   const handleOpenEdit = (emp: UserWithDept) => {
     setEditingEmp(emp);
     reset({
+      employeeCode: emp.employeeCode,
+      joiningDate: emp.joiningDate ? new Date(emp.joiningDate).toISOString().split('T')[0] : '',
       firstName: emp.firstName,
       lastName: emp.lastName,
       email: emp.email,
@@ -322,6 +341,30 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
           
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Employee ID</Label>
+              <Input
+                {...register('employeeCode')}
+                type="text"
+                placeholder="EMP-001"
+                disabled={isLoading}
+                className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150"
+              />
+              {errors.employeeCode && <p className="text-rose-400 mt-0.5">{errors.employeeCode.message as string}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Joining Date</Label>
+              <Input
+                {...register('joiningDate')}
+                type="date"
+                disabled={isLoading}
+                className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150 cursor-pointer"
+              />
+              {errors.joiningDate && <p className="text-rose-400 mt-0.5">{errors.joiningDate.message as string}</p>}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="font-semibold text-foreground uppercase tracking-wider">First Name</Label>
