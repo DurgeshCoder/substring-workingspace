@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { taskSchema, TaskInput } from '@/validations/task';
-import { createTask, updateTask, deleteTask, updateTaskStatus } from '@/actions/tasks';
+import { createTask, updateTask, deleteTask, updateTaskStatus, getComments, createComment } from '@/actions/tasks';
 import { 
   CheckSquare, 
   Plus, 
@@ -15,9 +15,11 @@ import {
   Loader2, 
   Edit2, 
   Trash2,
-  ListFilter
+  ListFilter,
+  MessageSquare,
+  Eye
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/modal';
 import { useRouter } from 'next/navigation';
@@ -70,7 +72,50 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [filterEmployee, setFilterEmployee] = useState<string>('ALL');
   const [filterDate, setFilterDate] = useState<string>('ALL');
+  const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
   const router = useRouter();
+
+  const handleOpenTaskDetails = (task: TaskWithRelations) => {
+    setSelectedTask(task);
+    loadComments(task.id);
+  };
+
+  const loadComments = async (taskId: string) => {
+    setIsLoadingComments(true);
+    try {
+      const res = await getComments(taskId);
+      if (res.success && res.comments) {
+        setComments(res.comments);
+      }
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  const handleSubmitComment = async (taskId: string) => {
+    if (!newComment.trim()) return;
+    setIsSubmittingComment(true);
+    try {
+      const res = await createComment(taskId, newComment);
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success('Comment added successfully!');
+        setNewComment('');
+        loadComments(taskId);
+      }
+    } catch (err) {
+      toast.error('Failed to add comment');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
 
   const {
     register,
@@ -183,7 +228,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       case 'MEDIUM':
         return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
       default:
-        return 'bg-slate-800 text-slate-400 border border-slate-700/50';
+        return 'bg-muted text-muted-foreground border border-border';
     }
   };
 
@@ -198,7 +243,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       case 'CANCELLED':
         return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
       default:
-        return 'bg-slate-800 text-slate-400 border border-slate-700/50';
+        return 'bg-muted text-muted-foreground border border-border';
     }
   };
 
@@ -251,7 +296,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Task Management</h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Create, schedule, assign, and track progress of system tasks.
           </p>
         </div>
@@ -265,8 +310,8 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       </div>
 
       {/* Filter Control Card */}
-      <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-md">
-        <div className="flex items-center space-x-2 text-xs font-bold text-slate-350 border-b border-slate-800/80 pb-3">
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-md">
+        <div className="flex items-center space-x-2 text-xs font-bold text-muted-foreground border-b border-border pb-3">
           <ListFilter className="w-4 h-4 text-indigo-400" />
           <span>Filter Tasks</span>
         </div>
@@ -274,11 +319,11 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Status Select */}
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status</label>
+            <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Status</label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full text-xs bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-slate-300 focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
+              className="w-full text-xs bg-background border border-border rounded-xl py-2 px-3 text-foreground focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
               <option value="TODO">TODO</option>
@@ -291,11 +336,11 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
 
           {/* Employee Select */}
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Assigned Employee</label>
+            <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Assigned Employee</label>
             <select
               value={filterEmployee}
               onChange={(e) => setFilterEmployee(e.target.value)}
-              className="w-full text-xs bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-slate-300 focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
+              className="w-full text-xs bg-background border border-border rounded-xl py-2 px-3 text-foreground focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
             >
               <option value="ALL">All Employees</option>
               {employees.map(emp => (
@@ -308,11 +353,11 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
 
           {/* Date Select */}
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Due Date</label>
+            <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Due Date</label>
             <select
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full text-xs bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-slate-300 focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
+              className="w-full text-xs bg-background border border-border rounded-xl py-2 px-3 text-foreground focus:outline-none focus:border-indigo-500 transition duration-150 cursor-pointer"
             >
               <option value="ALL">Any Due Date</option>
               <option value="TODAY">Due Today</option>
@@ -328,7 +373,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         {filteredTasks.map((task) => (
           <div 
             key={task.id}
-            className="bg-slate-900 border border-slate-800/80 hover:border-slate-700/60 rounded-2xl p-6 transition-all duration-200 group shadow-md"
+            className="bg-card border border-border hover:border-border/80 rounded-2xl p-6 transition-all duration-200 group shadow-md"
           >
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               
@@ -346,7 +391,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
                   <select
                     value={task.status}
                     onChange={(e) => handleQuickStatusChange(task, e.target.value as TaskStatus)}
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold border focus:outline-none bg-slate-900 cursor-pointer ${getStatusStyles(task.status)}`}
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold border focus:outline-none bg-card cursor-pointer ${getStatusStyles(task.status)}`}
                   >
                     <option value="TODO">TODO</option>
                     <option value="IN_PROGRESS">IN PROGRESS</option>
@@ -355,29 +400,29 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
                     <option value="CANCELLED">CANCELLED</option>
                   </select>
                 </div>
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed max-w-3xl">
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed max-w-3xl">
                   {task.description || 'No description provided.'}
                 </p>
               </div>
 
               {/* Assignment details */}
-              <div className="flex flex-wrap items-center gap-6 shrink-0 border-t border-slate-805/50 lg:border-t-0 pt-4 lg:pt-0">
+              <div className="flex flex-wrap items-center gap-6 shrink-0 border-t border-border lg:border-t-0 pt-4 lg:pt-0">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Assigned To</p>
-                    <p className="text-xs font-semibold text-slate-200">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Assigned To</p>
+                    <p className="text-xs font-semibold text-foreground">
                       {task.assignedTo.firstName} {task.assignedTo.lastName}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-0.5">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Due Date</p>
-                  <p className="text-xs font-semibold text-slate-300 flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Due Date</p>
+                  <p className="text-xs font-semibold text-foreground flex items-center">
+                    <Calendar className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
                     {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'No due date'}
                   </p>
                 </div>
@@ -385,14 +430,23 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
                 {/* Operations */}
                 <div className="flex items-center space-x-2 pt-2 lg:pt-0">
                   <button 
+                    onClick={() => handleOpenTaskDetails(task)}
+                    className="p-1.5 bg-background/40 border border-border hover:border-border/80 text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
+                    title="Specs & Chat"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
                     onClick={() => handleOpenEdit(task)}
-                    className="p-1.5 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg transition-all cursor-pointer"
+                    className="p-1.5 bg-background/40 border border-border hover:border-border/80 text-muted-foreground hover:text-white rounded-lg transition-all cursor-pointer"
+                    title="Edit Task"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={() => setDeletingTask(task)}
-                    className="p-1.5 bg-slate-950/40 border border-slate-805 hover:border-rose-900/60 text-slate-450 hover:text-rose-400 rounded-lg transition-all cursor-pointer"
+                    className="p-1.5 bg-background/40 border border-border hover:border-rose-900/60 text-muted-foreground hover:text-rose-400 rounded-lg transition-all cursor-pointer"
+                    title="Delete Task"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -404,10 +458,10 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         ))}
 
         {filteredTasks.length === 0 && (
-          <div className="bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl p-16 text-center text-slate-400 space-y-3">
-            <CheckSquare className="w-10 h-10 text-slate-700 mx-auto" />
+          <div className="bg-card/50 border border-dashed border-border rounded-2xl p-16 text-center text-muted-foreground space-y-3">
+            <CheckSquare className="w-10 h-10 text-muted-foreground mx-auto" />
             <p className="text-sm font-semibold">No tasks found</p>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               Create a task and assign it to an employee to begin monitoring system work.
             </p>
           </div>
@@ -423,35 +477,35 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-xs">
           
           <div className="space-y-1.5">
-            <Label className="font-semibold text-slate-300 uppercase tracking-wider">Task Title</Label>
+            <Label className="font-semibold text-foreground uppercase tracking-wider">Task Title</Label>
             <Input
               {...register('title')}
               type="text"
               placeholder="e.g. Implement API route validations"
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
+              className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150"
             />
             {errors.title && <p className="text-rose-400 mt-0.5">{errors.title.message as string}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label className="font-semibold text-slate-300 uppercase tracking-wider">Description</Label>
+            <Label className="font-semibold text-foreground uppercase tracking-wider">Description</Label>
             <Textarea
               {...register('description')}
               rows={3}
               placeholder="Detail the work requirements, links, or context for this assignment..."
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150"
+              className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Assignee</Label>
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Assignee</Label>
               <select
                 {...register('assignedToId')}
                 disabled={isLoading}
-                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
+                className="flex h-8 w-full rounded-lg border border-border bg-background/80 px-3 py-1 text-foreground focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="">Select Employee</option>
                 {employees.map(e => (
@@ -462,23 +516,23 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             </div>
             
             <div className="space-y-1.5">
-              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Due Date</Label>
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Due Date</Label>
               <Input
                 {...register('dueDate')}
                 type="date"
                 disabled={isLoading}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 px-3 text-slate-200 focus-visible:border-indigo-500 transition duration-150 text-xs"
+                className="w-full bg-background/80 border border-border rounded-xl py-2 px-3 text-foreground focus-visible:border-indigo-500 transition duration-150 text-xs"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Priority</Label>
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Priority</Label>
               <select
                 {...register('priority')}
                 disabled={isLoading}
-                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
+                className="flex h-8 w-full rounded-lg border border-border bg-background/80 px-3 py-1 text-foreground focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -488,11 +542,11 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             </div>
             
             <div className="space-y-1.5">
-              <Label className="font-semibold text-slate-300 uppercase tracking-wider">Status</Label>
+              <Label className="font-semibold text-foreground uppercase tracking-wider">Status</Label>
               <select
                 {...register('status')}
                 disabled={isLoading}
-                className="flex h-8 w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1 text-slate-200 focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
+                className="flex h-8 w-full rounded-lg border border-border bg-background/80 px-3 py-1 text-foreground focus:border-indigo-500 transition duration-150 cursor-pointer text-xs"
               >
                 <option value="TODO">TODO</option>
                 <option value="IN_PROGRESS">IN PROGRESS</option>
@@ -503,7 +557,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
             </div>
           </div>
 
-          <Separator className="bg-slate-800/80 my-2" />
+          <Separator className="bg-muted/80 my-2" />
 
           <div className="flex justify-end space-x-3">
             <Button
@@ -512,7 +566,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
               size="sm"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
-              className="rounded-xl font-semibold transition duration-150 text-slate-200"
+              className="rounded-xl font-semibold transition duration-150 text-foreground"
             >
               Cancel
             </Button>
@@ -543,11 +597,11 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         title="Confirm Task Deletion"
       >
         <div className="space-y-4">
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-foreground leading-relaxed">
             Are you sure you want to delete the task <span className="font-bold text-white">"{deletingTask?.title}"</span>? 
             This will permanently remove the task and all associated comments. This action cannot be reversed.
           </p>
-          <Separator className="bg-slate-800/80 my-2" />
+          <Separator className="bg-muted/80 my-2" />
           <div className="flex justify-end space-x-3">
             <Button
               type="button"
@@ -555,7 +609,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
               size="sm"
               onClick={() => setDeletingTask(null)}
               disabled={isLoading}
-              className="rounded-xl text-xs font-semibold text-slate-200 transition duration-150"
+              className="rounded-xl text-xs font-semibold text-foreground transition duration-150"
             >
               Cancel
             </Button>
@@ -571,6 +625,137 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
               ) : (
                 <span>Delete Task</span>
               )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Task Details Modal with Comments Thread */}
+      <Modal
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        title="Task Specifications"
+      >
+        <div className="space-y-4 text-xs text-foreground">
+          <div>
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold">Title</span>
+            <h4 className="text-sm font-bold text-white mt-1 leading-tight">{selectedTask?.title}</h4>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+            <div>
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">Priority</span>
+              <div className="mt-1">
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${selectedTask ? getPriorityStyles(selectedTask.priority) : ''}`}>
+                  {selectedTask?.priority}
+                </span>
+              </div>
+            </div>
+            <div>
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">Status</span>
+              <div className="mt-1">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-card text-muted-foreground border border-border">
+                  {selectedTask?.status}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+            <div>
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">Assigned To</span>
+              <p className="font-semibold text-foreground mt-1 flex items-center">
+                <User className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                {selectedTask?.assignedTo.firstName} {selectedTask?.assignedTo.lastName}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">Due Date</span>
+              <p className="font-semibold text-foreground mt-1 flex items-center">
+                <Calendar className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                {selectedTask?.dueDate ? format(new Date(selectedTask.dueDate), 'MMMM dd, yyyy') : 'No due date'}
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-border">
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold">Task Description</span>
+            <p className="mt-2 text-foreground leading-relaxed bg-background/40 p-3 rounded-xl border border-border whitespace-pre-line">
+              {selectedTask?.description || 'No description provided.'}
+            </p>
+          </div>
+
+          {/* Comments Section */}
+          <div className="pt-3 border-t border-border space-y-2.5">
+            <span className="text-[10px] text-muted-foreground uppercase font-semibold flex items-center gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+              Comments & Discussion
+            </span>
+
+            {/* Comments List */}
+            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+              {isLoadingComments ? (
+                <div className="flex justify-center items-center py-4">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : comments.length > 0 ? (
+                comments.map((c) => (
+                  <div key={c.id} className="p-2.5 bg-background/60 border border-border rounded-xl space-y-1">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-semibold text-indigo-300">
+                        {c.user.firstName} {c.user.lastName}
+                        <span className={`ml-1.5 px-1.5 py-0.2 rounded text-[7px] font-bold ${
+                          c.user.role === 'ADMIN' ? 'bg-indigo-500/10 text-indigo-405' : 'bg-fuchsia-500/10 text-fuchsia-405'
+                        }`}>
+                          {c.user.role}
+                        </span>
+                      </span>
+                      <span className="text-muted-foreground text-[9px]">
+                        {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-foreground whitespace-pre-wrap">{c.content}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] text-muted-foreground text-center py-4">No comments on this task yet.</p>
+              )}
+            </div>
+
+            {/* Write Comment Form */}
+            {selectedTask && (
+              <div className="flex gap-2 pt-1.5">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Post comment or reply..."
+                  rows={2}
+                  className="flex-1 text-[11px] bg-background/60 border border-border rounded-xl py-2 px-3 text-foreground focus:outline-none focus:border-indigo-500 transition duration-150 resize-none"
+                />
+                <Button
+                  type="button"
+                  onClick={() => handleSubmitComment(selectedTask.id)}
+                  disabled={isSubmittingComment || !newComment.trim()}
+                  className="px-3 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-[10px] flex items-center justify-center shrink-0 h-auto cursor-pointer"
+                >
+                  {isSubmittingComment ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <span>Send</span>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Action Footer */}
+          <div className="flex justify-end pt-4 border-t border-border">
+            <Button
+              type="button"
+              onClick={() => setSelectedTask(null)}
+              className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-xl cursor-pointer"
+            >
+              Close
             </Button>
           </div>
         </div>

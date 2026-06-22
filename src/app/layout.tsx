@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 import Providers from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Employee Management System (EMS)",
+  title: "Substring Workspace",
   description: "A production-grade, secure Employee Management System built with Next.js 15, Prisma, and MySQL.",
 };
 
@@ -27,9 +27,24 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-slate-950 text-slate-100 flex flex-col antialiased">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'light') {
+                  document.documentElement.classList.remove('dark');
+                } else {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full bg-background text-foreground flex flex-col antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

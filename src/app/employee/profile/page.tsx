@@ -28,7 +28,7 @@ export default async function EmployeeProfilePage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
         <h1 className="text-2xl font-bold text-white">My Profile</h1>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-muted-foreground">
           View your corporate profile details and account status.
         </p>
       </div>
@@ -36,32 +36,32 @@ export default async function EmployeeProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Profile Card Summary */}
-        <div className="lg:col-span-1 bg-slate-900 border border-slate-800/80 rounded-2xl p-6 text-center space-y-4 shadow-md flex flex-col items-center justify-center">
+        <div className="lg:col-span-1 bg-card border border-border rounded-2xl p-6 text-center space-y-4 shadow-md flex flex-col items-center justify-center">
           <div className="w-20 h-20 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 font-extrabold text-3xl shadow-lg">
             {user.firstName[0]}
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-slate-100">
+            <h2 className="text-lg font-bold text-foreground">
               {user.firstName} {user.lastName}
             </h2>
             <p className="text-xs text-fuchsia-400 font-semibold">{user.designation || 'Software Engineer'}</p>
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">{user.employeeCode}</p>
+            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{user.employeeCode}</p>
           </div>
-          <div className="pt-4 border-t border-slate-800/60 w-full flex justify-around text-center text-xs">
+          <div className="pt-4 border-t border-border w-full flex justify-around text-center text-xs">
             <div>
-              <p className="text-slate-500 uppercase tracking-wider text-[9px] font-semibold">Department</p>
-              <p className="font-bold text-slate-300 mt-0.5">{user.department?.name || 'Unassigned'}</p>
+              <p className="text-muted-foreground uppercase tracking-wider text-[9px] font-semibold">Department</p>
+              <p className="font-bold text-foreground mt-0.5">{user.department?.name || 'Unassigned'}</p>
             </div>
             <div>
-              <p className="text-slate-500 uppercase tracking-wider text-[9px] font-semibold">Status</p>
+              <p className="text-muted-foreground uppercase tracking-wider text-[9px] font-semibold">Status</p>
               <p className="font-bold text-emerald-400 mt-0.5">{user.status}</p>
             </div>
           </div>
         </div>
 
         {/* Profile Details List */}
-        <div className="lg:col-span-2 bg-slate-900 border border-slate-800/80 rounded-2xl p-6 space-y-6 shadow-md">
-          <h3 className="text-base font-bold text-white border-b border-slate-850 pb-3">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-6 shadow-md">
+          <h3 className="text-base font-bold text-white border-b border-border pb-3">
             Employee Specifications
           </h3>
 
@@ -69,46 +69,46 @@ export default async function EmployeeProfilePage() {
             
             {/* Email */}
             <div className="flex items-start space-x-3">
-              <Mail className="w-4 h-4 text-slate-500 mt-0.5" />
+              <Mail className="w-4 h-4 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-slate-500 font-semibold mb-0.5">Corporate Email</p>
-                <p className="text-slate-200 font-medium">{user.email}</p>
+                <p className="text-muted-foreground font-semibold mb-0.5">Corporate Email</p>
+                <p className="text-foreground font-medium">{user.email}</p>
               </div>
             </div>
 
             {/* Phone */}
             <div className="flex items-start space-x-3">
-              <Phone className="w-4 h-4 text-slate-500 mt-0.5" />
+              <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-slate-500 font-semibold mb-0.5">Phone Number</p>
-                <p className="text-slate-200 font-medium">{user.phone || 'Not specified'}</p>
+                <p className="text-muted-foreground font-semibold mb-0.5">Phone Number</p>
+                <p className="text-foreground font-medium">{user.phone || 'Not specified'}</p>
               </div>
             </div>
 
             {/* Joining Date */}
             <div className="flex items-start space-x-3">
-              <Calendar className="w-4 h-4 text-slate-500 mt-0.5" />
+              <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-slate-500 font-semibold mb-0.5">Joining Date</p>
-                <p className="text-slate-200 font-medium">{formattedDate}</p>
+                <p className="text-muted-foreground font-semibold mb-0.5">Joining Date</p>
+                <p className="text-foreground font-medium">{formattedDate}</p>
               </div>
             </div>
 
             {/* Gender */}
             <div className="flex items-start space-x-3">
-              <User className="w-4 h-4 text-slate-500 mt-0.5" />
+              <User className="w-4 h-4 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-slate-500 font-semibold mb-0.5">Gender Specification</p>
-                <p className="text-slate-200 font-medium">{user.gender || 'Not specified'}</p>
+                <p className="text-muted-foreground font-semibold mb-0.5">Gender Specification</p>
+                <p className="text-foreground font-medium">{user.gender || 'Not specified'}</p>
               </div>
             </div>
 
             {/* Salary */}
             <div className="flex items-start space-x-3">
-              <DollarSign className="w-4 h-4 text-slate-500 mt-0.5" />
+              <DollarSign className="w-4 h-4 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-slate-500 font-semibold mb-0.5">Base Salary</p>
-                <p className="text-slate-200 font-medium">
+                <p className="text-muted-foreground font-semibold mb-0.5">Base Salary</p>
+                <p className="text-foreground font-medium">
                   {user.salary ? `$${user.salary.toLocaleString()}` : 'Not disclosed'}
                 </p>
               </div>
@@ -116,10 +116,10 @@ export default async function EmployeeProfilePage() {
 
             {/* Address */}
             <div className="flex items-start space-x-3">
-              <MapPin className="w-4 h-4 text-slate-500 mt-0.5" />
+              <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-slate-500 font-semibold mb-0.5">Residential Address</p>
-                <p className="text-slate-200 font-medium leading-relaxed">
+                <p className="text-muted-foreground font-semibold mb-0.5">Residential Address</p>
+                <p className="text-foreground font-medium leading-relaxed">
                   {user.address || 'No registered address.'}
                 </p>
               </div>
@@ -127,7 +127,7 @@ export default async function EmployeeProfilePage() {
 
           </div>
 
-          <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 flex items-start space-x-3 text-slate-400">
+          <div className="bg-background/40 border border-border rounded-xl p-4 flex items-start space-x-3 text-muted-foreground">
             <ShieldAlert className="w-5 h-5 text-indigo-400 shrink-0" />
             <p className="text-[11px] leading-relaxed">
               If any specification in your profile is incorrect, please contact the <span className="font-semibold text-indigo-300">Human Resources Department</span>. Credentials are authenticated through the system directory service.

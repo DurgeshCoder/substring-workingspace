@@ -18,9 +18,9 @@ interface ModalProps {
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg bg-slate-900 border-slate-800 text-slate-100 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg bg-card border-border text-foreground max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold text-white tracking-tight border-b border-slate-800/80 pb-4">
+          <DialogTitle className="text-base font-bold text-foreground tracking-tight border-b border-border pb-4">
             {title}
           </DialogTitle>
         </DialogHeader>

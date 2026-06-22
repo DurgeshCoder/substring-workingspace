@@ -70,7 +70,7 @@ export default function NotificationsClient({ notifications }: NotificationsClie
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Notifications</h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Keep track of task allocations, updates, and updates across your workspace.
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function NotificationsClient({ notifications }: NotificationsClie
             disabled={isMarkingAll}
             variant="outline"
             size="sm"
-            className="border-slate-800 text-slate-300 hover:text-white rounded-xl flex items-center gap-1.5 cursor-pointer text-xs"
+            className="border-border text-foreground hover:text-white rounded-xl flex items-center gap-1.5 cursor-pointer text-xs"
           >
             {isMarkingAll ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -97,8 +97,8 @@ export default function NotificationsClient({ notifications }: NotificationsClie
         {notifications.map((n) => (
           <Card 
             key={n.id}
-            className={`bg-slate-900 border-slate-850 hover:border-slate-800 transition-all duration-200 rounded-2xl shadow-sm ${
-              !n.isRead ? 'ring-1 ring-indigo-500/20 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/10' : ''
+            className={`bg-card border-border hover:border-border transition-all duration-200 rounded-2xl shadow-sm ${
+              !n.isRead ? 'ring-1 ring-indigo-500/20 bg-gradient-to-r from-card via-card to-indigo-950/10' : ''
             }`}
           >
             <CardContent className="p-5 flex items-start gap-4 justify-between">
@@ -107,24 +107,24 @@ export default function NotificationsClient({ notifications }: NotificationsClie
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border mt-0.5 ${
                   !n.isRead 
                     ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' 
-                    : 'bg-slate-950/60 border-slate-800 text-slate-500'
+                    : 'bg-background/60 border-border text-muted-foreground'
                 }`}>
                   <Bell className="w-4.5 h-4.5" />
                 </div>
                 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className={`text-xs font-bold leading-tight ${!n.isRead ? 'text-white' : 'text-slate-300'}`}>
+                    <h3 className={`text-xs font-bold leading-tight ${!n.isRead ? 'text-white' : 'text-foreground'}`}>
                       {n.title}
                     </h3>
                     {!n.isRead && (
                       <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
                     {n.message}
                   </p>
-                  <p className="text-[10px] text-slate-500 flex items-center font-medium">
+                  <p className="text-[10px] text-muted-foreground flex items-center font-medium">
                     <Clock className="w-3.5 h-3.5 mr-1" />
                     {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                   </p>
@@ -137,7 +137,7 @@ export default function NotificationsClient({ notifications }: NotificationsClie
                   variant="ghost"
                   disabled={isLoading === n.id}
                   onClick={() => handleMarkAsRead(n.id)}
-                  className="text-slate-500 hover:text-indigo-400 hover:bg-slate-800/40 rounded-lg cursor-pointer shrink-0"
+                  className="text-muted-foreground hover:text-indigo-400 hover:bg-muted/40 rounded-lg cursor-pointer shrink-0"
                 >
                   {isLoading === n.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -152,10 +152,10 @@ export default function NotificationsClient({ notifications }: NotificationsClie
         ))}
 
         {notifications.length === 0 && (
-          <div className="bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl p-16 text-center text-slate-400 space-y-3 shadow-md">
-            <Bell className="w-10 h-10 text-slate-700 mx-auto animate-pulse" />
+          <div className="bg-card/50 border border-dashed border-border rounded-2xl p-16 text-center text-muted-foreground space-y-3 shadow-md">
+            <Bell className="w-10 h-10 text-muted-foreground mx-auto animate-pulse" />
             <p className="text-sm font-semibold">You're all caught up!</p>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               No new alerts or task notifications at this time.
             </p>
           </div>

@@ -118,7 +118,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Department Management</h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Create, edit, and organize departments inside the system.
           </p>
         </div>
@@ -136,7 +136,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
         {initialDepartments.map((dept) => (
           <div 
             key={dept.id} 
-            className="bg-slate-900 border border-slate-800/80 hover:border-slate-700/60 rounded-2xl p-6 space-y-4 transition-all duration-200 group flex flex-col justify-between shadow-md"
+            className="bg-card border border-border hover:border-border/80 rounded-2xl p-6 space-y-4 transition-all duration-200 group flex flex-col justify-between shadow-md"
           >
             <div className="space-y-3">
               {/* Department header */}
@@ -144,9 +144,9 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
                 <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
                   <Building2 className="w-5 h-5" />
                 </div>
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-                  <Users className="w-4 h-4 text-slate-500" />
-                  <span className="font-semibold text-slate-200">{dept._count.users}</span>
+                <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold text-foreground">{dept._count.users}</span>
                   <span>employees</span>
                 </div>
               </div>
@@ -156,19 +156,19 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
                 <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
                   {dept.name}
                 </h3>
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                   {dept.description || 'No description provided.'}
                 </p>
               </div>
             </div>
 
             {/* Department Footer Info */}
-            <div className="pt-4 border-t border-slate-800/40 mt-4 flex items-center justify-between text-[10px] text-slate-500">
+            <div className="pt-4 border-t border-border/40 mt-4 flex items-center justify-between text-[10px] text-muted-foreground">
               <span className="flex items-center">
                 <Calendar className="w-3.5 h-3.5 mr-1" />
                 Created {format(new Date(dept.createdAt), 'MMM dd, yyyy')}
               </span>
-              <div className="flex space-x-3 text-slate-400 font-semibold">
+              <div className="flex space-x-3 text-muted-foreground font-semibold">
                 <button 
                   onClick={() => handleOpenEdit(dept)}
                   className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
@@ -189,10 +189,10 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
         ))}
 
         {initialDepartments.length === 0 && (
-          <div className="col-span-full bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-400 space-y-2">
-            <Building2 className="w-8 h-8 text-slate-600 mx-auto" />
+          <div className="col-span-full bg-card/50 border border-dashed border-border rounded-2xl p-12 text-center text-muted-foreground space-y-2">
+            <Building2 className="w-8 h-8 text-muted-foreground mx-auto" />
             <p className="text-sm font-semibold">No departments found</p>
-            <p className="text-xs text-slate-500">Create one above to begin grouping employees.</p>
+            <p className="text-xs text-muted-foreground">Create one above to begin grouping employees.</p>
           </div>
         )}
       </div>
@@ -206,7 +206,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-foreground">
               Department Name
             </Label>
             <Input
@@ -214,7 +214,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
               type="text"
               placeholder="e.g. Sales, Quality Assurance"
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border-slate-800 rounded-xl py-2 px-3 text-slate-200 placeholder-slate-650 focus-visible:border-indigo-500 text-xs transition duration-200"
+              className="w-full bg-background/80 border-border rounded-xl py-2 px-3 text-foreground placeholder-muted-foreground focus-visible:border-indigo-500 text-xs transition duration-200"
             />
             {errors.name && (
               <p className="text-xs text-rose-400 font-medium mt-0.5">{errors.name.message}</p>
@@ -222,7 +222,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-foreground">
               Description
             </Label>
             <Textarea
@@ -230,14 +230,14 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
               rows={3}
               placeholder="Provide a brief explanation of this department's functions."
               disabled={isLoading}
-              className="w-full bg-slate-950/80 border-slate-800 rounded-xl py-2 px-3 text-slate-200 placeholder-slate-650 focus-visible:border-indigo-500 text-xs transition duration-200"
+              className="w-full bg-background/80 border-border rounded-xl py-2 px-3 text-foreground placeholder-muted-foreground focus-visible:border-indigo-500 text-xs transition duration-200"
             />
             {errors.description && (
               <p className="text-xs text-rose-400 font-medium mt-0.5">{errors.description.message}</p>
             )}
           </div>
 
-          <Separator className="bg-slate-800/80 my-2" />
+          <Separator className="bg-muted/80 my-2" />
 
           <div className="flex justify-end space-x-3">
             <Button
@@ -246,7 +246,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
               size="sm"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
-              className="rounded-xl text-xs font-semibold text-slate-200 transition duration-150"
+              className="rounded-xl text-xs font-semibold text-foreground transition duration-150"
             >
               Cancel
             </Button>
@@ -277,11 +277,11 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
         title="Confirm Deletion"
       >
         <div className="space-y-4">
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-foreground leading-relaxed">
             Are you sure you want to delete the department <span className="font-bold text-white">"{deletingDept?.name}"</span>? 
             This action cannot be undone. You can only delete departments that do not have active employees assigned.
           </p>
-          <Separator className="bg-slate-800/80 my-2" />
+          <Separator className="bg-muted/80 my-2" />
           <div className="flex justify-end space-x-3">
             <Button
               type="button"
@@ -289,7 +289,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
               size="sm"
               onClick={() => setDeletingDept(null)}
               disabled={isLoading}
-              className="rounded-xl text-xs font-semibold text-slate-200 transition duration-150"
+              className="rounded-xl text-xs font-semibold text-foreground transition duration-150"
             >
               Cancel
             </Button>

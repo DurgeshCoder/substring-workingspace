@@ -209,3 +209,86 @@ export async function deleteTask(id: string) {
     return { error: error.message || 'Failed to delete task.' };
   }
 }
+
+export async function createComment(taskId: string, content: string) {
+  try {
+    const user = await checkUser();
+    if (!content || content.trim() === '') {
+      return { error: 'Comment content cannot be empty.' };
+    }
+
+    const comment = await db.comment.create({
+      data: {
+        content,
+        taskId,
+        userId: user.id,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    await db.activityLog.create({
+      data: {
+        action: `Added a comment to task: ${taskId}`,
+        entityType: 'Comment',
+        entityId: comment.id,
+        performedBy: `${user.firstName} ${user.lastName}`,
+      },
+    });
+
+    const task = await db.task.findUnique({
+      where: { id: taskId },
+      select: { title: true, assignedById: true, assignedToId: true }
+    });
+
+    if (task) {
+      const recipientId = user.id === task.assignedToId ? task.assignedById : task.assignedToId;
+      if (recipientId !== user.id) {
+        await db.notification.create({
+          data: {
+            title: 'New Comment on Task',
+            message: `${user.firstName} ${user.lastName} commented on "${task.title}": "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+            userId: recipientId,
+          },
+        });
+      }
+    }
+
+    revalidatePath('/admin/tasks');
+    revalidatePath('/employee/tasks');
+    return { success: true, comment };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to add comment.' };
+  }
+}
+
+export async function getComments(taskId: string) {
+  try {
+    await checkUser();
+    const comments = await db.comment.findMany({
+      where: { taskId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    return { success: true, comments };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to fetch comments.', comments: [] };
+  }
+}
