@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  Kanban,
 } from "lucide-react";
 import { getUnreadCount } from "@/actions/notifications";
 
@@ -84,6 +85,7 @@ export default function AdminLayout({
     { name: "Employees", href: "/admin/employees", icon: Users },
     { name: "Departments", href: "/admin/departments", icon: Building2 },
     { name: "Tasks", href: "/admin/tasks", icon: CheckSquare },
+    { name: "Task Board", href: "/admin/task-board", icon: Kanban },
     { name: "Notifications", href: "/admin/notifications", icon: Bell },
     { name: "Activity Logs", href: "/admin/activity-logs", icon: History },
     { name: "Settings", href: "/admin/settings", icon: Settings },
