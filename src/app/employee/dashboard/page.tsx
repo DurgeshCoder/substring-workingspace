@@ -37,20 +37,16 @@ export default async function EmployeeDashboardPage() {
     where: { assignedToId: session.user.id, status: 'COMPLETED' }
   });
 
-  // Recent logs related to employee tasks or items updated
-  // Fetch latest logs and filter in memory to avoid MySQL collation mix issues with "contains" (LIKE operator)
-  const allLogs = await db.activityLog.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 100,
+  // Recent notifications related to employee
+  const notifications = await db.notification.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: 5,
   });
-
-  const userFirstName = session.user.firstName.toLowerCase();
-  const userLastName = session.user.lastName.toLowerCase();
-
-  const recentLogs = allLogs.filter(log => {
-    const actionLower = log.action.toLowerCase();
-    return actionLower.includes(userFirstName) || actionLower.includes(userLastName);
-  }).slice(0, 5);
 
   const stats = [
     { name: 'Assigned Tasks (To Do)', value: todoCount.toString(), icon: CheckSquare, color: 'from-indigo-500 to-blue-500', subtitle: 'Ready to start' },
@@ -133,31 +129,37 @@ export default async function EmployeeDashboardPage() {
           </div>
         </div>
 
-        {/* Task Activity Board */}
+        {/* Recent Notifications Board */}
         <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-md">
           <div className="flex justify-between items-center">
             <div className="space-y-0.5">
-              <h3 className="text-lg font-bold text-foreground">Your Recent Activities</h3>
+              <h3 className="text-lg font-bold text-foreground">Recent Notifications</h3>
               <p className="text-xs text-muted-foreground">
-                A log of updates relating to your tasks.
+                Updates and task assignments sent to you.
               </p>
             </div>
+            <Link href="/employee/notifications" className="text-xs text-fuchsia-400 hover:text-fuchsia-300 transition-colors font-medium">
+              View all
+            </Link>
           </div>
           
           <div className="space-y-3.5">
-            {recentLogs.map((log) => (
-              <div key={log.id} className="flex items-start space-x-3.5 p-3.5 bg-background/20 border border-border rounded-xl text-xs text-muted-foreground">
-                <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-500 mt-1 shrink-0" />
-                <div className="flex-1 space-y-0.5">
-                  <p className="font-semibold text-foreground">{log.action}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {log.performedBy} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
-                  </p>
+            {notifications.map((notif) => (
+              <div key={notif.id} className="flex items-start space-x-3.5 p-3.5 bg-background/20 border border-border rounded-xl text-xs text-muted-foreground animate-in fade-in duration-200">
+                <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${notif.isRead ? "bg-muted-foreground/30" : "bg-fuchsia-500 animate-pulse"}`} />
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`font-semibold text-foreground ${notif.isRead ? "opacity-70" : ""}`}>{notif.title}</p>
+                    <span className="text-[9px] text-muted-foreground font-medium shrink-0">
+                      {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{notif.message}</p>
                 </div>
               </div>
             ))}
-            {recentLogs.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-4">No recent task logs found.</p>
+            {notifications.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">No notifications found.</p>
             )}
           </div>
         </div>
