@@ -216,7 +216,7 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Employee Management</h1>
+          <h1 className="text-2xl font-bold text-foreground">Employee Management</h1>
           <p className="text-xs text-muted-foreground">
             View, add, edit and manage credentials for employees.
           </p>
@@ -557,7 +557,7 @@ export default function EmployeesClient({ initialEmployees, departments }: Emplo
           <div className="flex items-start space-x-3 text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl">
             <AlertTriangle className="w-5 h-5 shrink-0" />
             <p className="text-xs leading-relaxed">
-              WARNING: Deleting the record for <span className="font-bold text-white">"{deletingEmp?.firstName} {deletingEmp?.lastName}"</span> will permanently erase their credentials, profile, and comment threads. Tasks assigned to them will be deleted.
+              WARNING: Deleting the record for <span className="font-bold text-foreground">"{deletingEmp?.firstName} {deletingEmp?.lastName}"</span> will permanently erase their credentials, profile, and comment threads. Tasks assigned to them will be deleted.
             </p>
           </div>
           <p className="text-xs text-foreground">

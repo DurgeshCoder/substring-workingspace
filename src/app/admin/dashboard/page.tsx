@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
       {/* Top Welcome Banner */}
       <div className="bg-gradient-to-r from-indigo-900/40 via-fuchsia-900/10 to-card/50 border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">
             Welcome back, {userDisplayName}!
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
@@ -85,7 +85,7 @@ export default async function AdminDashboardPage() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {stat.name}
                 </span>
-                <p className="text-3xl font-bold text-white group-hover:scale-105 transition-transform duration-200 origin-left">
+                <p className="text-3xl font-bold text-foreground group-hover:scale-105 transition-transform duration-200 origin-left">
                   {stat.value}
                 </p>
               </div>
@@ -107,7 +107,7 @@ export default async function AdminDashboardPage() {
         {/* Quick Actions (Col 1) */}
         <div className="lg:col-span-1 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-md flex flex-col justify-between">
           <div className="space-y-2">
-            <h3 className="text-lg font-bold text-white">Quick Actions</h3>
+            <h3 className="text-lg font-bold text-foreground">Quick Actions</h3>
             <p className="text-xs text-muted-foreground">
               Common administrative tasks you can execute.
             </p>
@@ -141,7 +141,7 @@ export default async function AdminDashboardPage() {
         <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-md">
           <div className="flex justify-between items-center">
             <div className="space-y-0.5">
-              <h3 className="text-lg font-bold text-white">Recent Activity</h3>
+              <h3 className="text-lg font-bold text-foreground">Recent Activity</h3>
               <p className="text-xs text-muted-foreground">
                 Live updates and audit logs.
               </p>

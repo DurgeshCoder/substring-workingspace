@@ -257,7 +257,7 @@ export default function EmployeeTasksClient({ initialTasks, currentUser, admins 
       {/* Header section */}
       <div className="flex flex-row items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Task Board</h1>
+          <h1 className="text-2xl font-bold text-foreground">Task Board</h1>
           <p className="text-xs text-muted-foreground">
             Manage your task pipeline. Drag & drop cards between columns or click to view details.
           </p>
@@ -404,7 +404,7 @@ export default function EmployeeTasksClient({ initialTasks, currentUser, admins 
         <div className="space-y-4 text-xs text-foreground">
           <div>
             <span className="text-[10px] text-muted-foreground uppercase font-semibold">Title</span>
-            <h4 className="text-sm font-bold text-white mt-1 leading-tight">{selectedTask?.title}</h4>
+            <h4 className="text-sm font-bold text-foreground mt-1 leading-tight">{selectedTask?.title}</h4>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">

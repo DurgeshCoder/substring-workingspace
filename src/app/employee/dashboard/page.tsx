@@ -64,7 +64,7 @@ export default async function EmployeeDashboardPage() {
       {/* Top Welcome Banner */}
       <div className="bg-gradient-to-r from-fuchsia-900/40 via-indigo-900/10 to-card/50 border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground flex items-center gap-2">
             Welcome back, {userDisplayName}! <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse" />
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
@@ -89,7 +89,7 @@ export default async function EmployeeDashboardPage() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {stat.name}
                 </span>
-                <p className="text-3xl font-bold text-white group-hover:scale-105 transition-transform duration-200 origin-left">
+                <p className="text-3xl font-bold text-foreground group-hover:scale-105 transition-transform duration-200 origin-left">
                   {stat.value}
                 </p>
               </div>
@@ -110,7 +110,7 @@ export default async function EmployeeDashboardPage() {
         {/* Workspace Quick Links */}
         <div className="lg:col-span-1 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-md flex flex-col justify-between">
           <div className="space-y-2">
-            <h3 className="text-lg font-bold text-white">Your Workspace</h3>
+            <h3 className="text-lg font-bold text-foreground">Your Workspace</h3>
             <p className="text-xs text-muted-foreground">
               Access your task board and view your history.
             </p>
@@ -137,7 +137,7 @@ export default async function EmployeeDashboardPage() {
         <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-md">
           <div className="flex justify-between items-center">
             <div className="space-y-0.5">
-              <h3 className="text-lg font-bold text-white">Your Recent Activities</h3>
+              <h3 className="text-lg font-bold text-foreground">Your Recent Activities</h3>
               <p className="text-xs text-muted-foreground">
                 A log of updates relating to your tasks.
               </p>

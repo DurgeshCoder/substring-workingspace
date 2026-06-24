@@ -5,7 +5,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
-        <h1 className="text-2xl font-bold text-white">System Settings</h1>
+        <h1 className="text-2xl font-bold text-foreground">System Settings</h1>
         <p className="text-xs text-muted-foreground">
           Configure application variables, email integrations, and modules.
         </p>

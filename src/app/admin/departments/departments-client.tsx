@@ -117,7 +117,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Department Management</h1>
+          <h1 className="text-2xl font-bold text-foreground">Department Management</h1>
           <p className="text-xs text-muted-foreground">
             Create, edit, and organize departments inside the system.
           </p>
@@ -153,7 +153,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
 
               {/* Department specifications */}
               <div className="space-y-1.5">
-                <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+                <h3 className="text-base font-bold text-foreground group-hover:text-indigo-300 transition-colors">
                   {dept.name}
                 </h3>
                 <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
@@ -278,7 +278,7 @@ export default function DepartmentsClient({ initialDepartments }: DepartmentsCli
       >
         <div className="space-y-4">
           <p className="text-xs text-foreground leading-relaxed">
-            Are you sure you want to delete the department <span className="font-bold text-white">"{deletingDept?.name}"</span>? 
+            Are you sure you want to delete the department <span className="font-bold text-foreground">"{deletingDept?.name}"</span>? 
             This action cannot be undone. You can only delete departments that do not have active employees assigned.
           </p>
           <Separator className="bg-muted/80 my-2" />

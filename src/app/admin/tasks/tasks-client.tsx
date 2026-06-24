@@ -295,7 +295,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Task Management</h1>
+          <h1 className="text-2xl font-bold text-foreground">Task Management</h1>
           <p className="text-xs text-muted-foreground">
             Create, schedule, assign, and track progress of system tasks.
           </p>
@@ -380,7 +380,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
               {/* Task Details */}
               <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+                  <h3 className="text-base font-bold text-foreground group-hover:text-indigo-300 transition-colors">
                     {task.title}
                   </h3>
                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getPriorityStyles(task.priority)}`}>
@@ -598,7 +598,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       >
         <div className="space-y-4">
           <p className="text-xs text-foreground leading-relaxed">
-            Are you sure you want to delete the task <span className="font-bold text-white">"{deletingTask?.title}"</span>? 
+            Are you sure you want to delete the task <span className="font-bold text-foreground">"{deletingTask?.title}"</span>? 
             This will permanently remove the task and all associated comments. This action cannot be reversed.
           </p>
           <Separator className="bg-muted/80 my-2" />
@@ -639,7 +639,7 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
         <div className="space-y-4 text-xs text-foreground">
           <div>
             <span className="text-[10px] text-muted-foreground uppercase font-semibold">Title</span>
-            <h4 className="text-sm font-bold text-white mt-1 leading-tight">{selectedTask?.title}</h4>
+            <h4 className="text-sm font-bold text-foreground mt-1 leading-tight">{selectedTask?.title}</h4>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">

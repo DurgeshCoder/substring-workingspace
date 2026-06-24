@@ -27,7 +27,7 @@ export default async function EmployeeProfilePage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
-        <h1 className="text-2xl font-bold text-white">My Profile</h1>
+        <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
         <p className="text-xs text-muted-foreground">
           View your corporate profile details and account status.
         </p>
@@ -61,7 +61,7 @@ export default async function EmployeeProfilePage() {
 
         {/* Profile Details List */}
         <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-6 shadow-md">
-          <h3 className="text-base font-bold text-white border-b border-border pb-3">
+          <h3 className="text-base font-bold text-foreground border-b border-border pb-3">
             Employee Specifications
           </h3>
 

@@ -295,7 +295,7 @@ export default function AdminTaskBoardClient({
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Employee Task Board</h1>
+          <h1 className="text-2xl font-bold text-foreground">Employee Task Board</h1>
           <p className="text-xs text-muted-foreground">
             Engage and collaborate on work assigned to employees. Select an employee to view their board.
           </p>
@@ -338,7 +338,7 @@ export default function AdminTaskBoardClient({
                 {selectedEmployee?.firstName[0]}{selectedEmployee?.lastName[0]}
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">
+                <h3 className="text-sm font-bold text-foreground">
                   {selectedEmployee?.firstName} {selectedEmployee?.lastName}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -350,7 +350,7 @@ export default function AdminTaskBoardClient({
             <div className="flex items-center gap-6 text-xs border-t md:border-t-0 border-border pt-3 md:pt-0 w-full md:w-auto">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase font-semibold">Total Tasks</p>
-                <p className="text-sm font-bold text-white mt-0.5">{initialTasks.length}</p>
+                <p className="text-sm font-bold text-foreground mt-0.5">{initialTasks.length}</p>
               </div>
               <Separator orientation="vertical" className="h-8 bg-border hidden md:block" />
               <div>
@@ -500,7 +500,7 @@ export default function AdminTaskBoardClient({
             <Users className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-base font-bold text-white">No Employee Selected</h2>
+            <h2 className="text-base font-bold text-foreground">No Employee Selected</h2>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Please choose an employee from the dropdown list or select one below to view their active task pipeline.
             </p>
@@ -543,7 +543,7 @@ export default function AdminTaskBoardClient({
         <div className="space-y-4 text-xs text-foreground">
           <div>
             <span className="text-[10px] text-muted-foreground uppercase font-semibold">Title</span>
-            <h4 className="text-sm font-bold text-white mt-1 leading-tight">{selectedTask?.title}</h4>
+            <h4 className="text-sm font-bold text-foreground mt-1 leading-tight">{selectedTask?.title}</h4>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">

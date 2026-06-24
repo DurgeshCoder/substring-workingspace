@@ -16,7 +16,7 @@ export default async function AdminActivityLogsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
-        <h1 className="text-2xl font-bold text-white">System Activity Logs</h1>
+        <h1 className="text-2xl font-bold text-foreground">System Activity Logs</h1>
         <p className="text-xs text-muted-foreground">
           Audit trail of actions performed by administrators and employees.
         </p>
