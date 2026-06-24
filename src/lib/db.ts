@@ -23,25 +23,25 @@ function getMariaDbConfig(databaseUrl: string) {
       allowPublicKeyRetrieval: true,
     };
 
-    // Configure connection limit (default to 10)
+    // Configure connection limit (default to 5 to prevent database connection exhaustion in production)
     if (connectionLimitParam) {
       config.connectionLimit = parseInt(connectionLimitParam, 10);
     } else {
-      config.connectionLimit = 10;
+      config.connectionLimit = 5;
     }
 
-    // Configure acquire timeout (default to 10000ms)
+    // Configure acquire timeout (default to 20000ms to allow recovery under transient database load)
     if (acquireTimeoutParam) {
       config.acquireTimeout = parseInt(acquireTimeoutParam, 10);
     } else {
-      config.acquireTimeout = 10000;
+      config.acquireTimeout = 20000;
     }
 
-    // Configure connect timeout (default to 10000ms to be robust)
+    // Configure connect timeout (default to 15000ms to be robust)
     if (connectTimeoutParam) {
       config.connectTimeout = parseInt(connectTimeoutParam, 10);
     } else {
-      config.connectTimeout = 10000;
+      config.connectTimeout = 15000;
     }
 
     // Determine SSL/TLS settings
@@ -95,7 +95,7 @@ function createPrismaClient() {
 
 export const db = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db;
-}
+// Always store the prisma instance in the global scope (in both development and production)
+// to prevent hot-reloads and concurrent requests from instantiating duplicate client pools.
+globalForPrisma.prisma = db;
 
