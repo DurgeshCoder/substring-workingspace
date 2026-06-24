@@ -114,7 +114,7 @@ export default function AdminLayout({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transform transition-transform duration-300 lg:translate-x-0 lg:static ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transform transition-transform duration-300 lg:translate-x-0 lg:static shadow-sm ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -122,15 +122,18 @@ export default function AdminLayout({
         <div className="h-16 flex items-center justify-between px-6 border-b border-border">
           <Link
             href="/admin/dashboard"
-            className="flex items-center space-x-2.5"
+            className="flex items-center space-x-3 group"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/10">
-              <Shield className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 group-hover:rotate-3 transition duration-200">
+              <Shield className="w-4.5 h-4.5" />
             </div>
-            <span className="font-bold text-lg text-foreground">Workspace</span>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-indigo-400 transition-colors leading-tight">Workspace</span>
+              <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent font-black tracking-widest text-[8px] uppercase">ADMIN PORTAL</span>
+            </div>
           </Link>
           <button
-            className="lg:hidden text-muted-foreground hover:text-foreground"
+            className="lg:hidden text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-lg"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -145,14 +148,14 @@ export default function AdminLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group border-l-4 ${
                   isActive
-                    ? "bg-gradient-to-r from-indigo-600/20 to-fuchsia-600/10 border border-indigo-500/20 text-foreground font-semibold"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-gradient-to-r from-indigo-500/15 via-fuchsia-500/5 to-transparent border-indigo-500 text-foreground font-semibold shadow-inner pl-2"
+                    : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-1 pl-2 hover:border-indigo-500/30"
                 }`}
               >
                 <item.icon
-                  className={`w-5 h-5 transition-colors ${
+                  className={`w-4.5 h-4.5 transition-colors ${
                     isActive
                       ? "text-indigo-500 dark:text-indigo-400"
                       : "text-muted-foreground group-hover:text-foreground"
@@ -170,16 +173,19 @@ export default function AdminLayout({
         </nav>
 
         {/* Sidebar User Footer */}
-        <div className="p-4 border-t border-border bg-card/50">
-          <div className="flex items-center space-x-3 px-2 py-1.5 rounded-lg">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400 font-bold text-sm">
-              {session?.user?.firstName?.[0] || "A"}
+        <div className="p-4 border-t border-border/80 bg-card/60 backdrop-blur-sm">
+          <div className="flex items-center space-x-3 p-3 bg-background/40 hover:bg-background/60 border border-border/60 hover:border-border rounded-2xl transition duration-200 group cursor-pointer shadow-inner">
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 flex items-center justify-center text-indigo-500 dark:text-indigo-400 font-bold text-sm transition-all duration-200">
+                {session?.user?.firstName?.[0] || "A"}
+              </div>
+              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card group-hover:animate-pulse" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-foreground truncate leading-tight">
+              <p className="text-xs font-bold text-foreground truncate leading-tight group-hover:text-indigo-500 transition-colors duration-200">
                 {userDisplayName}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+              <p className="text-[9px] font-mono text-muted-foreground truncate mt-0.5 uppercase tracking-wider font-semibold">
                 {employeeCode}
               </p>
             </div>
