@@ -1,0 +1,65 @@
+{
+  "departments": [
+    {
+      "id": "cmqupgx780000ucusq42vps21",
+      "name": "Engineering",
+      "description": "Software Engineering Department",
+      "createdAt": "2026-06-26T09:05:16.052Z",
+      "updatedAt": "2026-06-26T09:05:16.052Z"
+    },
+    {
+      "id": "cmqupgx7i0001ucusgmp6mihx",
+      "name": "HR",
+      "description": "Human Resources Department",
+      "createdAt": "2026-06-26T09:05:16.062Z",
+      "updatedAt": "2026-06-26T09:05:16.062Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "cmqupgxbb0002ucusgis988ox",
+      "employeeCode": "EMP-001",
+      "firstName": "System",
+      "lastName": "Admin",
+      "email": "durgeshkumar8896@gmail.com",
+      "password": "$2b$10$/x02IvVsVjoHl121AEEynuCNq78NU48XJxJjulX7oTmX3ixNFACFO",
+      "phone": null,
+      "role": "ADMIN",
+      "departmentId": "cmqupgx780000ucusq42vps21",
+      "designation": "CTO",
+      "joiningDate": "2026-06-26T09:05:16.193Z",
+      "salary": 150000,
+      "gender": "Male",
+      "address": null,
+      "imageUrl": null,
+      "status": "ACTIVE",
+      "createdAt": "2026-06-26T09:05:16.199Z",
+      "updatedAt": "2026-06-26T09:05:16.199Z"
+    },
+    {
+      "id": "cmqupgxbm0003ucusifx7j6dl",
+      "employeeCode": "EMP-002",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "pravesh@gmail.com",
+      "password": "$2b$10$nmqXPMGX/Qd4bAiu2i3dAOMxIv/Rd6TncWmL7GVgBB6RB8Iz36IJ6",
+      "phone": null,
+      "role": "EMPLOYEE",
+      "departmentId": "cmqupgx780000ucusq42vps21",
+      "designation": "Software Engineer",
+      "joiningDate": "2026-06-26T09:05:16.204Z",
+      "salary": 80000,
+      "gender": "Male",
+      "address": null,
+      "imageUrl": null,
+      "status": "ACTIVE",
+      "createdAt": "2026-06-26T09:05:16.210Z",
+      "updatedAt": "2026-06-26T09:05:16.210Z"
+    }
+  ],
+  "tasks": [],
+  "comments": [],
+  "notifications": [],
+  "activityLogs": [],
+  "backedUpAt": "2026-06-26T09:13:08.384Z"
+}

@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   ListTodo,
+  CalendarDays,
 } from "lucide-react";
 import { getUnreadCount } from "@/actions/notifications";
 
@@ -71,7 +72,6 @@ export default function EmployeeLayout({
 
     fetchUnreadCount();
 
-    // Poll every 10 seconds for new notifications
     const interval = setInterval(fetchUnreadCount, 10000);
 
     return () => clearInterval(interval);
@@ -79,6 +79,7 @@ export default function EmployeeLayout({
 
   const navigation = [
     { name: "Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
+    { name: "Attendance", href: "/employee/attendance", icon: CalendarDays },
     { name: "Task Board", href: "/employee/tasks", icon: CheckSquare },
     { name: "Task List", href: "/employee/task-list", icon: ListTodo },
     { name: "Profile", href: "/employee/profile", icon: User },
@@ -98,7 +99,7 @@ export default function EmployeeLayout({
   const designation = session?.user?.designation || "Software Engineer";
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex transition-colors duration-200">
+    <div className="h-screen overflow-hidden bg-background text-foreground flex transition-colors duration-200">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -109,7 +110,7 @@ export default function EmployeeLayout({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transform transition-transform duration-300 lg:translate-x-0 lg:static shadow-sm ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transform transition-transform duration-300 lg:translate-x-0 lg:fixed lg:top-0 lg:bottom-0 lg:left-0 shadow-sm ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -189,7 +190,7 @@ export default function EmployeeLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full lg:pl-64 overflow-hidden">
         {/* Top Navbar */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
