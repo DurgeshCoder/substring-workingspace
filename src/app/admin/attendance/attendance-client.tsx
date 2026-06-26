@@ -20,7 +20,8 @@ import {
   X,
   Building,
   ShieldCheck,
-  CalendarRange
+  CalendarRange,
+  LayoutList
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -132,6 +133,7 @@ interface DashboardStats {
   wfh: number;
   absent: number;
   pendingApprovals: number;
+  pendingLeaves: number;
 }
 
 interface Employee {
@@ -177,6 +179,63 @@ interface AdminAttendanceClientProps {
   departments: Department[];
   userDisplayName: string;
 }
+
+const getLocalDateString = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+  
+  if (typeof dateInput === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+      return dateInput;
+    }
+    if (dateInput.includes('T00:00:00') || (dateInput.endsWith('.000Z') && date.getUTCHours() === 0)) {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+  
+  if (dateInput instanceof Date || typeof dateInput === 'object') {
+    const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
+    if (isMidnightUTC) {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatLocalDateString = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+  
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
+  if (isMidnightUTC) {
+    const weekday = days[date.getUTCDay()];
+    const day = date.getUTCDate();
+    const month = months[date.getUTCMonth()];
+    const year = date.getUTCFullYear();
+    return `${weekday}, ${month} ${day}, ${year}`;
+  } else {
+    const weekday = days[date.getDay()];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${weekday}, ${month} ${day}, ${year}`;
+  }
+};
 
 export default function AdminAttendanceClient({
   initialShifts,
@@ -275,6 +334,7 @@ export default function AdminAttendanceClient({
     status: '',
   });
   const [reportRecords, setReportRecords] = useState<any[]>([]);
+  const [reportViewMode, setReportViewMode] = useState<'table' | 'calendar'>('table');
   const [loadingReport, setLoadingReport] = useState(false);
 
   // Correction Action Modal states
@@ -449,6 +509,9 @@ export default function AdminAttendanceClient({
       const res = await getAttendanceReport(filters);
       if (res.success && res.records) {
         setReportRecords(res.records);
+        if (!filters.employeeId) {
+          setReportViewMode('table');
+        }
         if (res.records.length === 0) {
           toast.info('No attendance records found matching filters.');
         } else {
@@ -497,6 +560,163 @@ export default function AdminAttendanceClient({
     toast.success('Report exported to CSV successfully!');
   };
 
+  const getReportSummary = () => {
+    const present = reportRecords.filter(r => r.status === 'PRESENT' || r.status === 'LATE').length;
+    const halfDay = reportRecords.filter(r => r.status === 'HALF_DAY').length;
+    const leave = reportRecords.filter(r => r.status === 'ON_LEAVE' || r.status === 'LEAVE').length;
+    const absent = reportRecords.filter(r => r.status === 'ABSENT').length;
+    
+    let notMarked = 0;
+    if (filters.employeeId) {
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth() + 1;
+      
+      let endDay = new Date(filters.year, filters.month, 0).getDate();
+      if (filters.year === currentYear && filters.month === currentMonth) {
+        endDay = today.getDate();
+      }
+      
+      for (let d = 1; d <= endDay; d++) {
+        const checkDate = new Date(filters.year, filters.month - 1, d);
+        const isWeekend = checkDate.getDay() === 0; // Sunday is the only weekend
+        
+        const dateStr = `${filters.year}-${String(filters.month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        
+        const hasRecord = reportRecords.some(r => {
+          const rDate = new Date(r.date);
+          const rYear = rDate.getUTCFullYear();
+          const rMonth = String(rDate.getUTCMonth() + 1).padStart(2, '0');
+          const rDay = String(rDate.getUTCDate()).padStart(2, '0');
+          const rDateStr = `${rYear}-${rMonth}-${rDay}`;
+          return rDateStr === dateStr;
+        });
+        
+        const hasHoliday = holidays.some(h => {
+          const hDate = new Date(h.date);
+          const hYear = hDate.getUTCFullYear();
+          const hMonth = String(hDate.getUTCMonth() + 1).padStart(2, '0');
+          const hDay = String(hDate.getUTCDate()).padStart(2, '0');
+          const hDateStr = `${hYear}-${hMonth}-${hDay}`;
+          return hDateStr === dateStr;
+        });
+        
+        if (!isWeekend && !hasHoliday) {
+          if (!hasRecord) {
+            notMarked++;
+          }
+        }
+      }
+    }
+    
+    return { present, halfDay, leave, absent, notMarked };
+  };
+
+  const getDaysInMonth = (m: number, y: number) => new Date(y, m, 0).getDate();
+  const getFirstDayOfMonth = (m: number, y: number) => {
+    const firstDay = new Date(y, m - 1, 1).getDay();
+    return firstDay === 0 ? 6 : firstDay - 1;
+  };
+
+  const renderAdminReportCalendar = () => {
+    const m = filters.month;
+    const y = filters.year;
+    const daysCount = getDaysInMonth(m, y);
+    const startOffset = getFirstDayOfMonth(m, y);
+    
+    const calendarDays = [];
+    for (let i = 0; i < startOffset; i++) {
+      calendarDays.push(null);
+    }
+    
+    for (let d = 1; d <= daysCount; d++) {
+      const date = new Date(y, m - 1, d);
+      const dateStr = getLocalDateString(date);
+      
+      const record = reportRecords.find(r => {
+        const recordDateStr = getLocalDateString(r.date);
+        return recordDateStr === dateStr;
+      }) || null;
+      
+      const holiday = holidays.find(h => {
+        const holidayDateStr = getLocalDateString(h.date);
+        return holidayDateStr === dateStr;
+      }) || null;
+      
+      const isWeekend = date.getDay() === 0; // Sunday only
+      
+      calendarDays.push({
+        day: d,
+        date,
+        record,
+        holiday,
+        isWeekend,
+      });
+    }
+    
+    return calendarDays;
+  };
+
+  const getReportStatusClasses = (dayObj: any) => {
+    if (!dayObj) return 'bg-transparent text-transparent border-transparent cursor-default pointer-events-none';
+    
+    const { record, holiday, isWeekend } = dayObj;
+    
+    if (record) {
+      const status = record.status.toUpperCase();
+      if (status === 'PRESENT') return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:scale-[1.02] shadow-sm';
+      if (status === 'LATE') return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:scale-[1.02] shadow-sm';
+      if (status === 'HALF_DAY') return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20 hover:bg-orange-500/20 hover:scale-[1.02] shadow-sm';
+      if (status === 'ON_LEAVE' || status === 'LEAVE') return 'bg-red-500/10 text-red-655 dark:text-red-450 border-red-500/20 hover:bg-red-500/20 hover:scale-[1.02] shadow-sm';
+      if (status === 'HOLIDAY') return 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 hover:bg-violet-500/20 hover:scale-[1.02] shadow-sm';
+      if (status === 'WEEKEND') return 'bg-slate-500/5 text-slate-650 dark:text-slate-400 border-slate-500/10 hover:bg-slate-500/10 hover:scale-[1.02]';
+      if (status === 'ABSENT') return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20 hover:scale-[1.02] shadow-sm';
+      return 'bg-card border-border hover:bg-muted hover:scale-[1.02]';
+    }
+
+    if (holiday) {
+      return 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 hover:bg-violet-500/20 hover:scale-[1.02] shadow-sm';
+    }
+
+    if (isWeekend) {
+      return 'bg-slate-500/5 text-slate-550 dark:text-slate-455 border-slate-500/10 hover:bg-slate-500/10 hover:scale-[1.02]';
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(dayObj.date);
+    compareDate.setHours(0, 0, 0, 0);
+    if (compareDate < today) {
+      return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border-dashed border-gray-300 dark:border-gray-800 hover:bg-gray-500/15 hover:scale-[1.02] shadow-sm';
+    }
+
+    return 'bg-card border-border hover:bg-muted hover:scale-[1.02] text-muted-foreground';
+  };
+
+  const getReportStatusLabel = (dayObj: any) => {
+    if (!dayObj) return '';
+    const { record, holiday, isWeekend } = dayObj;
+    if (record) {
+      if (record.status === 'PRESENT') return 'Present';
+      if (record.status === 'LATE') return 'Late';
+      if (record.status === 'HALF_DAY') return 'Half Day';
+      if (record.status === 'ON_LEAVE' || record.status === 'LEAVE') return 'Leave';
+      if (record.status === 'HOLIDAY') return 'Holiday';
+      if (record.status === 'WEEKEND') return 'Weekend';
+      if (record.status === 'ABSENT') return 'Absent';
+    }
+    if (holiday) return 'Holiday';
+    if (isWeekend) return 'Weekend';
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(dayObj.date);
+    compareDate.setHours(0, 0, 0, 0);
+    if (compareDate < today) return 'Not Marked';
+    
+    return '-';
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
@@ -536,7 +756,7 @@ export default function AdminAttendanceClient({
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
               
               <Card className="shadow-md hover:border-indigo-500/20 transition group">
                 <CardContent className="p-5 flex flex-col justify-between h-full">
@@ -582,13 +802,24 @@ export default function AdminAttendanceClient({
                 </CardContent>
               </Card>
 
-              <Card className="shadow-md hover:border-indigo-500/20 transition group col-span-2 md:col-span-1">
+              <Card className="shadow-md hover:border-indigo-500/20 transition group">
                 <CardContent className="p-5 flex flex-col justify-between h-full">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Pending Approvals</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Pending Corrections</span>
                   <p className="text-2xl font-black text-foreground mt-2">{stats?.pendingApprovals ?? 0}</p>
                   <div className="flex items-center text-[10px] text-muted-foreground mt-4 gap-1">
                     <ShieldAlert className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
                     <span>Corrections pending</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-md hover:border-rose-500/20 transition group">
+                <CardContent className="p-5 flex flex-col justify-between h-full">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Pending Leaves</span>
+                  <p className="text-2xl font-black text-foreground mt-2">{stats?.pendingLeaves ?? 0}</p>
+                  <div className="flex items-center text-[10px] text-muted-foreground mt-4 gap-1">
+                    <CalendarIcon className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+                    <span>Leaves pending</span>
                   </div>
                 </CardContent>
               </Card>
@@ -1334,12 +1565,92 @@ export default function AdminAttendanceClient({
 
             {/* Records list */}
             {reportRecords.length > 0 && (
-              <Card className="border border-border rounded-3xl p-6 shadow-md">
-                <CardHeader className="p-0 pb-4 flex flex-row justify-between items-center">
-                  <CardTitle className="text-sm font-bold text-foreground">Query Result ({reportRecords.length} records)</CardTitle>
+              <div className="space-y-6">
+                
+                {/* Report Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  <Card className="shadow-md bg-indigo-950/10 border border-indigo-500/20 rounded-2xl p-5 flex items-center justify-between group">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Total Present Days</span>
+                      <p className="text-2xl font-black text-foreground mt-1.5">{getReportSummary().present} Days</p>
+                      {getReportSummary().halfDay > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-1">Includes {getReportSummary().halfDay} Half-Days</p>
+                      )}
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                  </Card>
+
+                  <Card className="shadow-md bg-red-950/10 border border-red-500/20 rounded-2xl p-5 flex items-center justify-between group">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Total Leaves Taken</span>
+                      <p className="text-2xl font-black text-foreground mt-1.5">{getReportSummary().leave} Days</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Approved & pending leaves</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
+                      <CalendarIcon className="w-5 h-5" />
+                    </div>
+                  </Card>
+
+                  <Card className="shadow-md bg-gray-950/10 border border-gray-500/20 rounded-2xl p-5 flex items-center justify-between group">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Days Not Marked</span>
+                      <p className="text-2xl font-black text-foreground mt-1.5">
+                        {filters.employeeId ? `${getReportSummary().notMarked} Days` : '--'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {filters.employeeId ? 'Unmarked weekdays this month' : 'Select an employee to view'}
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-gray-500/10 flex items-center justify-center text-gray-400">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                  </Card>
+
+                </div>
+
+                <Card className="border border-border rounded-3xl p-6 shadow-md">
+                <CardHeader className="p-0 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <CardTitle className="text-sm font-bold text-foreground">Query Result ({reportRecords.length} records)</CardTitle>
+                    {filters.employeeId && (
+                      <div className="flex bg-muted/60 p-1 rounded-xl border border-border/40 w-fit">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setReportViewMode('table')}
+                          className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                            reportViewMode === 'table' 
+                              ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <LayoutList className="w-3 h-3 mr-1.5" />
+                          Table View
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setReportViewMode('calendar')}
+                          className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                            reportViewMode === 'calendar' 
+                              ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white' 
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <CalendarIcon className="w-3 h-3 mr-1.5" />
+                          Calendar View
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <Button
                     onClick={handleExportCSV}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer rounded-xl flex items-center gap-2 shadow-md shadow-emerald-500/10"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer rounded-xl flex items-center gap-2 shadow-md shadow-emerald-500/10 self-start sm:self-auto"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Export CSV
@@ -1347,92 +1658,242 @@ export default function AdminAttendanceClient({
                 </CardHeader>
 
                 <CardContent className="p-0">
-                  <div className="overflow-x-auto border border-border rounded-2xl">
-                    <Table className="text-xs">
-                      <TableHeader className="bg-muted">
-                        <TableRow>
-                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Employee</TableHead>
-                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Date</TableHead>
-                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Timings</TableHead>
-                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Working Time</TableHead>
-                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Late / Overtime</TableHead>
-                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Status</TableHead>
-                          <TableHead className="px-6 py-4 text-right font-bold uppercase text-muted-foreground">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {reportRecords.map((r) => (
-                          <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
-                            <TableCell className="px-6 py-4">
-                              <div className="font-bold text-foreground">
-                                {r.employee.firstName} {r.employee.lastName}
+                  {reportViewMode === 'calendar' && filters.employeeId ? (
+                    <div className="space-y-6">
+                      {/* Days of week header */}
+                      <div className="grid grid-cols-7 gap-3 text-center text-[10px] font-black uppercase text-muted-foreground tracking-wider pb-2 border-b border-border/40">
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                        <div className="text-rose-400">Sun</div>
+                      </div>
+
+                      {/* Calendar Grid Cells */}
+                      <div className="grid grid-cols-7 gap-3">
+                        {renderAdminReportCalendar().map((dayObj, index) => {
+                          if (!dayObj) {
+                            return <div key={`report-offset-${index}`} className="aspect-square bg-muted/5 border border-transparent rounded-2xl opacity-20" />;
+                          }
+
+                          const statusClass = getReportStatusClasses(dayObj);
+                          const label = getReportStatusLabel(dayObj);
+                          const dateStr = getLocalDateString(dayObj.date);
+
+                          return (
+                            <button
+                              key={`report-day-${dayObj.day}`}
+                              type="button"
+                              onClick={() => {
+                                const formattedDate = dateStr;
+                                const checkInTime = dayObj.record?.checkIn 
+                                  ? new Date(dayObj.record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
+                                  : '09:00';
+                                const checkOutTime = dayObj.record?.checkOut 
+                                  ? new Date(dayObj.record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
+                                  : '18:00';
+
+                                setManualRecord({
+                                  employeeId: filters.employeeId,
+                                  date: formattedDate,
+                                  checkIn: checkInTime,
+                                  checkOut: checkOutTime,
+                                  status: dayObj.record?.status || (dayObj.holiday ? 'HOLIDAY' : (dayObj.isWeekend ? 'ABSENT' : 'PRESENT')),
+                                  reason: dayObj.record 
+                                    ? `Override of existing entry from ${formattedDate}` 
+                                    : `Manual record entry for ${formattedDate}`,
+                                });
+                                setManualDate(new Date(dayObj.date));
+                                setActiveTab('manual');
+                                toast.info(`Pre-filled override form for ${formattedDate}`);
+                              }}
+                              className={`aspect-square border rounded-2xl flex flex-col justify-between p-3 text-xs font-semibold cursor-pointer transition-all duration-200 outline-none select-none relative group/cell hover:border-indigo-500/40 hover:shadow-lg hover:-translate-y-0.5 ${statusClass}`}
+                              title={dayObj.holiday ? `Holiday: ${dayObj.holiday.title}` : `Click to override/set attendance for ${dateStr}`}
+                            >
+                              {/* Day number and holiday dot */}
+                              <div className="flex justify-between items-start w-full">
+                                <span className="text-sm font-black tracking-tight">{dayObj.day}</span>
+                                {dayObj.holiday && (
+                                  <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" title={dayObj.holiday.title} />
+                                )}
                               </div>
-                              <div className="text-[10px] text-muted-foreground font-mono uppercase mt-0.5">
-                                {r.employee.employeeCode} | {r.employee.department?.name || 'N/A'}
+
+                              {/* Work Timings */}
+                              <div className="my-auto text-left w-full overflow-hidden">
+                                {dayObj.holiday ? (
+                                  <p className="text-[9px] font-bold text-violet-400 truncate tracking-wide" title={dayObj.holiday.title}>
+                                    {dayObj.holiday.title}
+                                  </p>
+                                ) : dayObj.record ? (
+                                  <div className="space-y-0.5 font-mono text-[9px] text-muted-foreground/90 opacity-80 group-hover/cell:opacity-100 transition-opacity">
+                                    {dayObj.record.checkIn ? (
+                                      <p className="truncate">
+                                        IN: <span className="font-extrabold">{new Date(dayObj.record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                      </p>
+                                    ) : (
+                                      <p className="truncate">IN: --:--</p>
+                                    )}
+                                    {dayObj.record.checkOut ? (
+                                      <p className="truncate">
+                                        OUT: <span className="font-extrabold">{new Date(dayObj.record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                      </p>
+                                    ) : (
+                                      <p className="truncate">OUT: --:--</p>
+                                    )}
+                                  </div>
+                                ) : dayObj.isWeekend ? (
+                                  <p className="text-[9px] font-extrabold text-slate-500/80 italic tracking-wide">
+                                    Weekend
+                                  </p>
+                                ) : (
+                                  <p className="text-[9px] font-bold text-gray-500/80 italic tracking-wide">
+                                    Not Marked
+                                  </p>
+                                )}
                               </div>
-                            </TableCell>
-                            <TableCell className="px-6 py-4 font-semibold">
-                              {new Date(r.date).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell className="px-6 py-4">
-                              <div className="font-mono text-muted-foreground text-[11px]">
-                                IN: {r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+
+                              {/* Footer (Label and Edit Indicator) */}
+                              <div className="w-full flex justify-between items-center mt-auto">
+                                <span className="text-[9px] font-black uppercase tracking-wider bg-background/40 px-1.5 py-0.5 rounded-md backdrop-blur-[2px] border border-white/5">
+                                  {label}
+                                </span>
+                                
+                                <span className="text-[8px] opacity-0 group-hover/cell:opacity-100 transition-opacity text-indigo-400 font-extrabold">
+                                  Edit &rarr;
+                                </span>
                               </div>
-                              <div className="font-mono text-muted-foreground text-[11px] mt-0.5">
-                                OUT: {r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-6 py-4 font-semibold">
-                              {r.workingMinutes 
-                                ? `${Math.floor(r.workingMinutes / 60)}h ${r.workingMinutes % 60}m` 
-                                : '--'}
-                            </TableCell>
-                            <TableCell className="px-6 py-4">
-                              <div className="text-yellow-400 font-semibold">{r.lateMinutes > 0 ? `Late: ${r.lateMinutes} min` : '--'}</div>
-                              <div className="text-emerald-400 font-semibold mt-0.5">{r.overtimeMinutes > 0 ? `OT: ${r.overtimeMinutes} min` : '--'}</div>
-                            </TableCell>
-                            <TableCell className="px-6 py-4">
-                              <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase border ${
-                                r.status === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                r.status === 'LATE' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                r.status === 'HALF_DAY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                                r.status === 'ON_LEAVE' || r.status === 'LEAVE' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                r.status === 'HOLIDAY' ? 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20' :
-                                'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                              }`}>
-                                {r.status}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-6 py-4 text-right">
-                              <Button
-                                onClick={() => {
-                                  // Pre-fill manual form and switch tab
-                                  setManualRecord({
-                                    employeeId: r.employeeId,
-                                    date: new Date(r.date).toISOString().split('T')[0],
-                                    checkIn: r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '09:00',
-                                    checkOut: r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '18:00',
-                                    status: r.status,
-                                    reason: `Override of existing entry from ${new Date(r.date).toLocaleDateString()}`,
-                                  });
-                                  setManualDate(new Date(r.date));
-                                  setActiveTab('manual');
-                                }}
-                                size="sm"
-                                variant="outline"
-                                className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl cursor-pointer"
-                              >
-                                Override
-                              </Button>
-                            </TableCell>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Legend */}
+                      <div className="pt-6 border-t border-border/40 flex flex-wrap gap-x-6 gap-y-3 justify-center text-[10px] uppercase font-black text-muted-foreground tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30" />
+                          <span>Present</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30" />
+                          <span>Absent</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-red-500/10 border border-red-500/30" />
+                          <span>Leave</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30" />
+                          <span>Late</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-orange-500/10 border border-orange-500/30" />
+                          <span>Half Day</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-violet-500/10 border border-violet-500/30" />
+                          <span>Holiday</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-slate-500/5 border border-slate-500/20" />
+                          <span>Weekend (Sun)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3.5 h-3.5 rounded-lg bg-gray-500/10 border border-dashed border-gray-500/30" />
+                          <span>Not Marked</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border border-border rounded-2xl">
+                      <Table className="text-xs">
+                        <TableHeader className="bg-muted">
+                          <TableRow>
+                            <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Employee</TableHead>
+                            <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Date</TableHead>
+                            <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Timings</TableHead>
+                            <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Working Time</TableHead>
+                            <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Late / Overtime</TableHead>
+                            <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Status</TableHead>
+                            <TableHead className="px-6 py-4 text-right font-bold uppercase text-muted-foreground">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        </TableHeader>
+                        <TableBody>
+                          {reportRecords.map((r) => (
+                            <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
+                              <TableCell className="px-6 py-4">
+                                <div className="font-bold text-foreground">
+                                  {r.employee.firstName} {r.employee.lastName}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground font-mono uppercase mt-0.5">
+                                  {r.employee.employeeCode} | {r.employee.department?.name || 'N/A'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 font-semibold">
+                                {new Date(r.date).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="px-6 py-4">
+                                <div className="font-mono text-muted-foreground text-[11px]">
+                                  IN: {r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                </div>
+                                <div className="font-mono text-muted-foreground text-[11px] mt-0.5">
+                                  OUT: {r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 font-semibold">
+                                {r.workingMinutes 
+                                  ? `${Math.floor(r.workingMinutes / 60)}h ${r.workingMinutes % 60}m` 
+                                  : '--'}
+                              </TableCell>
+                              <TableCell className="px-6 py-4">
+                                <div className="text-yellow-400 font-semibold">{r.lateMinutes > 0 ? `Late: ${r.lateMinutes} min` : '--'}</div>
+                                <div className="text-emerald-400 font-semibold mt-0.5">{r.overtimeMinutes > 0 ? `OT: ${r.overtimeMinutes} min` : '--'}</div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4">
+                                <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase border ${
+                                  r.status === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                  r.status === 'LATE' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                  r.status === 'HALF_DAY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                  r.status === 'ON_LEAVE' || r.status === 'LEAVE' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                  r.status === 'HOLIDAY' ? 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20' :
+                                  'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                }`}>
+                                  {r.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 text-right">
+                                <Button
+                                  onClick={() => {
+                                    // Pre-fill manual form and switch tab
+                                    setManualRecord({
+                                      employeeId: r.employeeId,
+                                      date: getLocalDateString(r.date),
+                                      checkIn: r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '09:00',
+                                      checkOut: r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '18:00',
+                                      status: r.status,
+                                      reason: `Override of existing entry from ${getLocalDateString(r.date)}`,
+                                    });
+                                    setManualDate(new Date(r.date));
+                                    setActiveTab('manual');
+                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl cursor-pointer"
+                                >
+                                  Override
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
+            </div>
+          )}
           </div>
         )}
       </div>

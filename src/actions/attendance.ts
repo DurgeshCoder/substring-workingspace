@@ -1014,6 +1014,13 @@ export async function getAdminDashboardStats() {
       where: { status: 'PENDING' },
     });
 
+    const pendingLeaves = await db.attendance.count({
+      where: {
+        status: 'ON_LEAVE',
+        approvalStatus: 'PENDING',
+      },
+    });
+
     return {
       success: true,
       stats: {
@@ -1024,6 +1031,7 @@ export async function getAdminDashboardStats() {
         wfh: wfhCount,
         absent: Math.max(0, absentCount),
         pendingApprovals,
+        pendingLeaves,
       },
     };
   } catch (error: any) {
