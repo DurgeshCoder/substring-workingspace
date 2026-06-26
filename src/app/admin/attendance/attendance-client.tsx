@@ -593,8 +593,8 @@ export default function AdminAttendanceClient({
       }
       
       for (let d = 1; d <= endDay; d++) {
-        const checkDate = new Date(filters.year, filters.month - 1, d);
-        const isWeekend = checkDate.getDay() === 0; // Sunday is the only weekend
+        const checkDate = new Date(Date.UTC(filters.year, filters.month - 1, d));
+        const isWeekend = checkDate.getUTCDay() === 0; // Sunday is the only weekend
         
         const dateStr = `${filters.year}-${String(filters.month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         
@@ -645,7 +645,7 @@ export default function AdminAttendanceClient({
     }
     
     for (let d = 1; d <= daysCount; d++) {
-      const date = new Date(y, m - 1, d);
+      const date = new Date(Date.UTC(y, m - 1, d));
       const dateStr = getLocalDateString(date);
       
       const record = reportRecords.find(r => {
@@ -658,7 +658,7 @@ export default function AdminAttendanceClient({
         return holidayDateStr === dateStr;
       }) || null;
       
-      const isWeekend = date.getDay() === 0; // Sunday only
+      const isWeekend = date.getUTCDay() === 0; // Sunday only
       
       calendarDays.push({
         day: d,

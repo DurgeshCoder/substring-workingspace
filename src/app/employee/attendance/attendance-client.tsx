@@ -449,7 +449,7 @@ export default function AttendanceClient({
   }
 
   for (let d = 1; d <= daysCount; d++) {
-    const date = new Date(year, month - 1, d);
+    const date = new Date(Date.UTC(year, month - 1, d));
     const dateStr = getLocalDateString(date);
 
     const record = calendarRecords.find(r => {
@@ -462,7 +462,7 @@ export default function AttendanceClient({
       return holidayDateStr === dateStr;
     }) || null;
 
-    const isWeekend = date.getDay() === 0;
+    const isWeekend = date.getUTCDay() === 0;
 
     calendarDays.push({
       day: d,
