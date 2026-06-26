@@ -534,6 +534,15 @@ export default function AttendanceClient({
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
+      {/* Beta Notice Banner */}
+      <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl p-4 flex items-center gap-3 shadow-md backdrop-blur-sm">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <p className="text-xs font-semibold">
+          <span className="font-extrabold uppercase bg-amber-500/20 px-1.5 py-0.5 rounded mr-1.5">Beta</span>
+          The attendance system is currently in beta. Please test it thoroughly and provide your feedback.
+        </p>
+      </div>
+
       {/* 1. Header Greeting & Real-time clock */}
       <div className="bg-gradient-to-r from-indigo-950/40 via-purple-950/10 to-card/50 border border-border rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl backdrop-blur-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
