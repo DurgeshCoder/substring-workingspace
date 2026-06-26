@@ -180,36 +180,58 @@ interface AdminAttendanceClientProps {
   userDisplayName: string;
 }
 
+const formatTime12h = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return '--:--';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '--:--';
+  const tz = process.env.NEXT_PUBLIC_TIMEZONE || 'Asia/Kolkata';
+  try {
+    return date.toLocaleTimeString('en-US', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch (e) {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+};
+
+const formatTime24h = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return '09:00';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '09:00';
+  const tz = process.env.NEXT_PUBLIC_TIMEZONE || 'Asia/Kolkata';
+  try {
+    return date.toLocaleTimeString('en-US', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  } catch (e) {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  }
+};
+
 const getLocalDateString = (dateInput: Date | string | null | undefined): string => {
   if (!dateInput) return '';
   const date = new Date(dateInput);
   if (isNaN(date.getTime())) return '';
   
-  if (typeof dateInput === 'string') {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-      return dateInput;
-    }
-    if (dateInput.includes('T00:00:00') || (dateInput.endsWith('.000Z') && date.getUTCHours() === 0)) {
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-  }
-  
-  if (dateInput instanceof Date || typeof dateInput === 'object') {
-    const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
-    if (isMidnightUTC) {
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-  }
-  
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  // Midnight UTC dates are used for calendar/database dates. Use UTC parts directly
+  // to prevent shift caused by timezone offsets.
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
@@ -221,21 +243,14 @@ const formatLocalDateString = (dateInput: Date | string | null | undefined): str
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   
-  const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
-  if (isMidnightUTC) {
-    const weekday = days[date.getUTCDay()];
-    const day = date.getUTCDate();
-    const month = months[date.getUTCMonth()];
-    const year = date.getUTCFullYear();
-    return `${weekday}, ${month} ${day}, ${year}`;
-  } else {
-    const weekday = days[date.getDay()];
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    return `${weekday}, ${month} ${day}, ${year}`;
-  }
+  // Use UTC parts to format the display calendar date and avoid offset shifts
+  const weekday = days[date.getUTCDay()];
+  const day = date.getUTCDate();
+  const month = months[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  return `${weekday}, ${month} ${day}, ${year}`;
 };
+
 
 export default function AdminAttendanceClient({
   initialShifts,
@@ -540,8 +555,8 @@ export default function AdminAttendanceClient({
       `${r.employee.firstName} ${r.employee.lastName}`,
       r.employee.employeeCode,
       r.employee.department?.name || 'N/A',
-      r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--',
-      r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--',
+      r.checkIn ? formatTime12h(r.checkIn) : '--',
+      r.checkOut ? formatTime12h(r.checkOut) : '--',
       r.workingMinutes ? (r.workingMinutes / 60).toFixed(2) : '0.00',
       r.lateMinutes.toString(),
       r.overtimeMinutes.toString(),
@@ -888,22 +903,22 @@ export default function AdminAttendanceClient({
                             </div>
                           </TableCell>
                           <TableCell className="px-6 py-4 font-medium">
-                            {new Date(req.attendance.date).toLocaleDateString()}
+                            {formatLocalDateString(req.attendance.date)}
                           </TableCell>
                           <TableCell className="px-6 py-4">
                             <div className="font-mono text-muted-foreground text-[11px]">
-                              IN: {req.attendance.checkIn ? new Date(req.attendance.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                              IN: {req.attendance.checkIn ? formatTime12h(req.attendance.checkIn) : '--:--'}
                             </div>
                             <div className="font-mono text-muted-foreground text-[11px] mt-0.5">
-                              OUT: {req.attendance.checkOut ? new Date(req.attendance.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                              OUT: {req.attendance.checkOut ? formatTime12h(req.attendance.checkOut) : '--:--'}
                             </div>
                           </TableCell>
                           <TableCell className="px-6 py-4">
                             <div className="font-mono text-indigo-400 text-[11px] font-bold">
-                              IN: {req.requestedCheckIn ? new Date(req.requestedCheckIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                              IN: {req.requestedCheckIn ? formatTime12h(req.requestedCheckIn) : '--:--'}
                             </div>
                             <div className="font-mono text-indigo-400 text-[11px] font-bold mt-0.5">
-                              OUT: {req.requestedCheckOut ? new Date(req.requestedCheckOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                              OUT: {req.requestedCheckOut ? formatTime12h(req.requestedCheckOut) : '--:--'}
                             </div>
                           </TableCell>
                           <TableCell className="px-6 py-4 max-w-[200px] truncate" title={req.reason}>
@@ -1697,11 +1712,9 @@ export default function AdminAttendanceClient({
                               type="button"
                               onClick={() => {
                                 const formattedDate = dateStr;
-                                const checkInTime = dayObj.record?.checkIn 
-                                  ? new Date(dayObj.record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
-                                  : '09:00';
+                                const checkInTime = formatTime24h(dayObj.record?.checkIn);
                                 const checkOutTime = dayObj.record?.checkOut 
-                                  ? new Date(dayObj.record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
+                                  ? formatTime24h(dayObj.record.checkOut) 
                                   : '18:00';
 
                                 setManualRecord({
@@ -1739,14 +1752,14 @@ export default function AdminAttendanceClient({
                                   <div className="space-y-0.5 font-mono text-[9px] text-muted-foreground/90 opacity-80 group-hover/cell:opacity-100 transition-opacity">
                                     {dayObj.record.checkIn ? (
                                       <p className="truncate">
-                                        IN: <span className="font-extrabold">{new Date(dayObj.record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        IN: <span className="font-extrabold">{formatTime12h(dayObj.record.checkIn)}</span>
                                       </p>
                                     ) : (
                                       <p className="truncate">IN: --:--</p>
                                     )}
                                     {dayObj.record.checkOut ? (
                                       <p className="truncate">
-                                        OUT: <span className="font-extrabold">{new Date(dayObj.record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        OUT: <span className="font-extrabold">{formatTime12h(dayObj.record.checkOut)}</span>
                                       </p>
                                     ) : (
                                       <p className="truncate">OUT: --:--</p>
@@ -1840,14 +1853,14 @@ export default function AdminAttendanceClient({
                                 </div>
                               </TableCell>
                               <TableCell className="px-6 py-4 font-semibold">
-                                {new Date(r.date).toLocaleDateString()}
+                                {formatLocalDateString(r.date)}
                               </TableCell>
                               <TableCell className="px-6 py-4">
                                 <div className="font-mono text-muted-foreground text-[11px]">
-                                  IN: {r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                  IN: {r.checkIn ? formatTime12h(r.checkIn) : '--:--'}
                                 </div>
                                 <div className="font-mono text-muted-foreground text-[11px] mt-0.5">
-                                  OUT: {r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                  OUT: {r.checkOut ? formatTime12h(r.checkOut) : '--:--'}
                                 </div>
                               </TableCell>
                               <TableCell className="px-6 py-4 font-semibold">
@@ -1878,8 +1891,8 @@ export default function AdminAttendanceClient({
                                     setManualRecord({
                                       employeeId: r.employeeId,
                                       date: getLocalDateString(r.date),
-                                      checkIn: r.checkIn ? new Date(r.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '09:00',
-                                      checkOut: r.checkOut ? new Date(r.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '18:00',
+                                      checkIn: formatTime24h(r.checkIn),
+                                      checkOut: r.checkOut ? formatTime24h(r.checkOut) : '18:00',
                                       status: r.status,
                                       reason: `Override of existing entry from ${getLocalDateString(r.date)}`,
                                     });
@@ -1941,10 +1954,10 @@ export default function AdminAttendanceClient({
                     Original Entry
                   </span>
                   <div className="text-xs font-semibold text-foreground font-mono">
-                    IN: {selectedCorrection.attendance.checkIn ? new Date(selectedCorrection.attendance.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    IN: {selectedCorrection.attendance.checkIn ? formatTime12h(selectedCorrection.attendance.checkIn) : '--:--'}
                   </div>
                   <div className="text-xs font-semibold text-foreground font-mono mt-0.5">
-                    OUT: {selectedCorrection.attendance.checkOut ? new Date(selectedCorrection.attendance.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    OUT: {selectedCorrection.attendance.checkOut ? formatTime12h(selectedCorrection.attendance.checkOut) : '--:--'}
                   </div>
                 </div>
 
@@ -1953,10 +1966,10 @@ export default function AdminAttendanceClient({
                     Requested Entry
                   </span>
                   <div className="text-xs font-bold text-indigo-300 font-mono">
-                    IN: {selectedCorrection.requestedCheckIn ? new Date(selectedCorrection.requestedCheckIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    IN: {selectedCorrection.requestedCheckIn ? formatTime12h(selectedCorrection.requestedCheckIn) : '--:--'}
                   </div>
                   <div className="text-xs font-bold text-indigo-300 font-mono mt-0.5">
-                    OUT: {selectedCorrection.requestedCheckOut ? new Date(selectedCorrection.requestedCheckOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    OUT: {selectedCorrection.requestedCheckOut ? formatTime12h(selectedCorrection.requestedCheckOut) : '--:--'}
                   </div>
                 </div>
               </div>

@@ -99,14 +99,42 @@ const formatTime12h = (dateInput: Date | string | null | undefined): string => {
   if (!dateInput) return '--:--';
   const date = new Date(dateInput);
   if (isNaN(date.getTime())) return '--:--';
-  let hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // mapping 0 to 12
-  const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
-  const hoursStr = hours < 10 ? `0${hours}` : hours;
-  return `${hoursStr}:${minutesStr} ${ampm}`;
+  const tz = process.env.NEXT_PUBLIC_TIMEZONE || 'Asia/Kolkata';
+  try {
+    return date.toLocaleTimeString('en-US', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch (e) {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+};
+
+const formatTime24h = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return '09:00';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '09:00';
+  const tz = process.env.NEXT_PUBLIC_TIMEZONE || 'Asia/Kolkata';
+  try {
+    return date.toLocaleTimeString('en-US', {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  } catch (e) {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  }
 };
 
 const getLocalDateString = (dateInput: Date | string | null | undefined): string => {
@@ -114,31 +142,11 @@ const getLocalDateString = (dateInput: Date | string | null | undefined): string
   const date = new Date(dateInput);
   if (isNaN(date.getTime())) return '';
   
-  if (typeof dateInput === 'string') {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-      return dateInput;
-    }
-    if (dateInput.includes('T00:00:00') || (dateInput.endsWith('.000Z') && date.getUTCHours() === 0)) {
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-  }
-  
-  if (dateInput instanceof Date || typeof dateInput === 'object') {
-    const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
-    if (isMidnightUTC) {
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-  }
-  
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  // Midnight UTC dates are used for calendar/database dates. Use UTC parts directly
+  // to prevent shift caused by timezone offsets.
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
@@ -150,21 +158,14 @@ const formatLocalDateString = (dateInput: Date | string | null | undefined): str
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   
-  const isMidnightUTC = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0;
-  if (isMidnightUTC) {
-    const weekday = days[date.getUTCDay()];
-    const day = date.getUTCDate();
-    const month = months[date.getUTCMonth()];
-    const year = date.getUTCFullYear();
-    return `${weekday}, ${month} ${day}, ${year}`;
-  } else {
-    const weekday = days[date.getDay()];
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    return `${weekday}, ${month} ${day}, ${year}`;
-  }
+  // Use UTC parts to format the display calendar date and avoid offset shifts
+  const weekday = days[date.getUTCDay()];
+  const day = date.getUTCDate();
+  const month = months[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  return `${weekday}, ${month} ${day}, ${year}`;
 };
+
 
 export default function AttendanceClient({
   initialTodayRecord,
@@ -952,16 +953,8 @@ export default function AttendanceClient({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setRequestedCheckIn(
-                    selectedDayRecord.record?.checkIn 
-                      ? new Date(selectedDayRecord.record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
-                      : '09:00'
-                  );
-                  setRequestedCheckOut(
-                    selectedDayRecord.record?.checkOut 
-                      ? new Date(selectedDayRecord.record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
-                      : '18:00'
-                  );
+                  setRequestedCheckIn(formatTime24h(selectedDayRecord.record?.checkIn));
+                  setRequestedCheckOut(formatTime24h(selectedDayRecord.record?.checkOut));
                   setCorrectionModalOpen(true);
                 }}
                 className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition"

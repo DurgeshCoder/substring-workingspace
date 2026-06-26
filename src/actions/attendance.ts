@@ -4,6 +4,11 @@ import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { sendSSEMessage } from '@/lib/sse';
+import { 
+  getTodayInTimezone, 
+  convertLocalTimeToUTC, 
+  getMinutesFromStartOfDayInTimezone 
+} from '@/lib/timezone';
 
 // Helper to check authentication
 async function getSessionUser() {
@@ -140,7 +145,8 @@ export async function createHoliday(data: { title: string; date: string; type: s
     const user = await getSessionUser();
     if (user.role !== 'ADMIN') throw new Error('Admin access required.');
 
-    const dateObj = new Date(data.date);
+    const [year, month, day] = data.date.split('-').map(Number);
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
     const holiday = await db.holiday.create({
       data: {
         title: data.title,
@@ -208,8 +214,7 @@ function getMinutesFromStartOfDay(date: Date): number {
 export async function getTodayAttendance() {
   try {
     const user = await getSessionUser();
-    const now = new Date();
-    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const today = getTodayInTimezone();
 
     const record = await db.attendance.findFirst({
       where: {
@@ -242,7 +247,7 @@ export async function checkIn(data: {
   try {
     const user = await getSessionUser();
     const checkInTime = new Date();
-    const today = new Date(Date.UTC(checkInTime.getFullYear(), checkInTime.getMonth(), checkInTime.getDate()));
+    const today = getTodayInTimezone();
 
     // 1. Check if already checked in
     const existing = await db.attendance.findUnique({
@@ -270,7 +275,7 @@ export async function checkIn(data: {
     const graceMins = shift?.graceMinutes ?? 15;
     const halfDayStr = shift?.halfDayAfter || '10:30';
 
-    const checkInMinutes = getMinutesFromStartOfDay(checkInTime);
+    const checkInMinutes = getMinutesFromStartOfDayInTimezone(checkInTime);
     const shiftStartMinutes = parseTimeToMinutes(shiftStartStr);
     const halfDayMinutes = parseTimeToMinutes(halfDayStr);
 
@@ -451,8 +456,8 @@ export async function getEmployeeCalendar(month: number, year: number, selectEmp
     const user = await getSessionUser();
     const targetUserId = (user.role === 'ADMIN' && selectEmployeeId) ? selectEmployeeId : user.id;
 
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
     const attendances = await db.attendance.findMany({
       where: {
@@ -487,8 +492,8 @@ export async function getEmployeeStats() {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    const startDate = new Date(currentYear, currentMonth - 1, 1);
-    const endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+    const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
+    const endDate = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59, 999));
 
     const attendances = await db.attendance.findMany({
       where: {
@@ -601,8 +606,8 @@ export async function raiseCorrection(
     }
 
     const dateStr = attendance.date.toISOString().split('T')[0];
-    const checkInDateTime = new Date(`${dateStr}T${data.requestedCheckIn}:00`);
-    const checkOutDateTime = new Date(`${dateStr}T${data.requestedCheckOut}:00`);
+    const checkInDateTime = convertLocalTimeToUTC(dateStr, data.requestedCheckIn);
+    const checkOutDateTime = convertLocalTimeToUTC(dateStr, data.requestedCheckOut);
 
     const correction = await db.attendanceCorrection.create({
       data: {
@@ -708,7 +713,7 @@ export async function approveCorrection(correctionId: string, managerComment?: s
       const graceMins = shift?.graceMinutes ?? 15;
       const halfDayStr = shift?.halfDayAfter || '10:30';
 
-      const checkInMins = getMinutesFromStartOfDay(checkInTime);
+      const checkInMins = getMinutesFromStartOfDayInTimezone(checkInTime);
       const shiftStartMins = parseTimeToMinutes(shiftStartStr);
       const halfDayMins = parseTimeToMinutes(halfDayStr);
 
@@ -854,8 +859,8 @@ export async function addManualAttendance(data: {
     const [year, month, day] = data.date.split('-').map(Number);
     const dateObj = new Date(Date.UTC(year, month - 1, day));
 
-    const checkInTime = data.checkIn ? new Date(`${data.date}T${data.checkIn}:00`) : null;
-    const checkOutTime = data.checkOut ? new Date(`${data.date}T${data.checkOut}:00`) : null;
+    const checkInTime = data.checkIn ? convertLocalTimeToUTC(data.date, data.checkIn) : null;
+    const checkOutTime = data.checkOut ? convertLocalTimeToUTC(data.date, data.checkOut) : null;
 
     const employee = await db.user.findUnique({ where: { id: data.employeeId } });
     let shift = employee?.shiftId ? await db.shift.findUnique({ where: { id: employee.shiftId } }) : null;
@@ -876,7 +881,7 @@ export async function addManualAttendance(data: {
 
     // Only calculate times if checkInTime is provided
     if (checkInTime) {
-      const checkInMins = getMinutesFromStartOfDay(checkInTime);
+      const checkInMins = getMinutesFromStartOfDayInTimezone(checkInTime);
       const shiftStartMins = parseTimeToMinutes(shiftStartStr);
       const halfDayMins = parseTimeToMinutes(halfDayStr);
 
@@ -995,8 +1000,7 @@ export async function getAdminDashboardStats() {
     const user = await getSessionUser();
     if (user.role !== 'ADMIN') throw new Error('Admin role required.');
 
-    const now = new Date();
-    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const today = getTodayInTimezone();
 
     const totalEmployees = await db.user.count({ where: { status: 'ACTIVE' } });
 
@@ -1063,8 +1067,8 @@ export async function getAttendanceReport(filters: {
     }
 
     if (filters.month && filters.year) {
-      const startDate = new Date(filters.year, filters.month - 1, 1);
-      const endDate = new Date(filters.year, filters.month, 0, 23, 59, 59, 999);
+      const startDate = new Date(Date.UTC(filters.year, filters.month - 1, 1));
+      const endDate = new Date(Date.UTC(filters.year, filters.month, 0, 23, 59, 59, 999));
       where.date = {
         gte: startDate,
         lte: endDate,
