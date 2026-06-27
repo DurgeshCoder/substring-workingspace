@@ -35,6 +35,13 @@ export default function AdminLayout({
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [attendanceOpen, setAttendanceOpen] = useState(false);
+
+  useEffect(() => {
+    if (pathname.startsWith("/admin/attendance")) {
+      setAttendanceOpen(true);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const isLight =
@@ -82,7 +89,19 @@ export default function AdminLayout({
 
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-    { name: "Attendance", href: "/admin/attendance", icon: CalendarDays },
+    {
+      name: "Attendance",
+      href: "/admin/attendance",
+      icon: CalendarDays,
+      subItems: [
+        { name: "Overview", href: "/admin/attendance/overview" },
+        { name: "Corrections", href: "/admin/attendance/correction" },
+        { name: "Manual Logs", href: "/admin/attendance/manual" },
+        { name: "Work Shifts", href: "/admin/attendance/shifts" },
+        { name: "Holidays", href: "/admin/attendance/holidays" },
+        { name: "Reports", href: "/admin/attendance/report" },
+      ],
+    },
     { name: "Employees", href: "/admin/employees", icon: Users },
     { name: "Departments", href: "/admin/departments", icon: Building2 },
     { name: "Tasks", href: "/admin/tasks", icon: CheckSquare },
@@ -144,6 +163,65 @@ export default function AdminLayout({
         {/* Sidebar Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
           {navigation.map((item) => {
+            if (item.subItems) {
+              const isGroupActive = pathname.startsWith(item.href);
+              const isOpen = item.name === "Attendance" ? attendanceOpen : false;
+              const toggleOpen = () => {
+                if (item.name === "Attendance") {
+                  setAttendanceOpen(!attendanceOpen);
+                }
+              };
+
+              return (
+                <div key={item.name} className="space-y-1">
+                  <button
+                    onClick={toggleOpen}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group border-l-4 cursor-pointer outline-none ${
+                      isGroupActive
+                        ? "bg-gradient-to-r from-indigo-500/10 to-transparent border-indigo-500 text-foreground font-semibold"
+                        : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <item.icon
+                        className={`w-4.5 h-4.5 transition-colors ${
+                          isGroupActive
+                            ? "text-indigo-500 dark:text-indigo-400"
+                            : "text-muted-foreground group-hover:text-foreground"
+                        }`}
+                      />
+                      <span>{item.name}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        isOpen ? "transform rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="pl-9 space-y-1 transition-all duration-200">
+                      {item.subItems.map((sub) => {
+                        const isSubActive = pathname === sub.href;
+                        return (
+                          <Link
+                            key={sub.name}
+                            href={sub.href}
+                            className={`flex items-center px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                              isSubActive
+                                ? "text-indigo-400 font-bold"
+                                : "text-muted-foreground hover:text-foreground hover:translate-x-0.5"
+                            }`}
+                          >
+                            {sub.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
