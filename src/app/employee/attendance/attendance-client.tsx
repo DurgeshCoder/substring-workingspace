@@ -88,11 +88,20 @@ interface Stats {
   leaveDays: number;
 }
 
+interface ShiftInfo {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  graceMinutes: number;
+}
+
 interface AttendanceClientProps {
   initialTodayRecord: AttendanceRecord | null;
   initialStats: Stats | null;
   userDisplayName: string;
   userId: string;
+  shift: ShiftInfo | null;
 }
 
 const formatTime12h = (dateInput: Date | string | null | undefined): string => {
@@ -137,7 +146,16 @@ const formatTime24h = (dateInput: Date | string | null | undefined): string => {
   }
 };
 
+// Converts a plain "HH:MM" string (e.g. shift.startTime) to "09:00 AM" format
+const formatTimeTo12h = (timeStr: string): string => {
+  const [h, m] = timeStr.split(':').map(Number);
+  const date = new Date();
+  date.setHours(h, m, 0, 0);
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
 const getLocalDateString = (dateInput: Date | string | null | undefined): string => {
+
   if (!dateInput) return '';
   const date = new Date(dateInput);
   if (isNaN(date.getTime())) return '';
@@ -171,7 +189,8 @@ export default function AttendanceClient({
   initialTodayRecord,
   initialStats,
   userDisplayName,
-  userId
+  userId,
+  shift,
 }: AttendanceClientProps) {
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(initialTodayRecord);
   const [stats, setStats] = useState<Stats | null>(initialStats);
@@ -590,7 +609,9 @@ export default function AttendanceClient({
               </CardTitle>
             </div>
             <span className="text-xs text-muted-foreground font-mono">
-              Shift: General (09:00 AM - 06:00 PM)
+              {shift
+                ? `Shift: ${shift.name} (${formatTimeTo12h(shift.startTime)} - ${formatTimeTo12h(shift.endTime)})`
+                : 'No shift assigned'}
             </span>
           </CardHeader>
 

@@ -24,6 +24,23 @@ export default async function EmployeeDashboardPage() {
   const userDisplayName = `${session.user.firstName} ${session.user.lastName}`;
   const designation = session.user.designation || 'Software Engineer';
 
+  // Fetch employee's assigned shift
+  const dbUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    include: { shift: true },
+  });
+  let shift = dbUser?.shift ?? null;
+  if (!shift) {
+    shift = await db.shift.findFirst({ where: { isActive: true } }) ?? null;
+  }
+
+  // Helper to format "HH:MM" → "09:00 AM"
+  const fmtTime = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    const d = new Date(); d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
   // Fetch real-time statistics from DB
   const todoCount = await db.task.count({
     where: { assignedToId: session.user.id, status: 'TODO' }
@@ -67,11 +84,22 @@ export default async function EmployeeDashboardPage() {
             You are logged in as <span className="font-semibold text-fuchsia-300">{designation}</span>.
           </p>
         </div>
-        <div className="flex items-center space-x-3 bg-background/50 border border-border px-4 py-2.5 rounded-xl text-xs font-semibold text-fuchsia-400">
-          <AlertCircle className="w-4 h-4" />
-          <span>Keep pushing forward!</span>
+        <div className="flex flex-col items-end gap-2">
+          {/* Shift Badge */}
+          <div className="flex items-center gap-2 bg-background/50 border border-blue-500/30 px-4 py-2 rounded-xl text-xs font-semibold text-blue-300">
+            <Clock className="w-3.5 h-3.5" />
+            {shift
+              ? <span>{shift.name}: {fmtTime(shift.startTime)} – {fmtTime(shift.endTime)}</span>
+              : <span className="text-muted-foreground">No shift assigned</span>
+            }
+          </div>
+          <div className="flex items-center space-x-3 bg-background/50 border border-border px-4 py-2.5 rounded-xl text-xs font-semibold text-fuchsia-400">
+            <AlertCircle className="w-4 h-4" />
+            <span>Keep pushing forward!</span>
+          </div>
         </div>
       </div>
+
 
       {/* Grid of stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

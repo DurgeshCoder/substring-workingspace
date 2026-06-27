@@ -216,6 +216,18 @@ export async function getTodayAttendance() {
     const user = await getSessionUser();
     const today = getTodayInTimezone();
 
+    // Fetch the DB user with their shift assignment
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      include: { shift: true },
+    });
+
+    // Resolve shift: assigned shift → first active shift → null
+    let shift = dbUser?.shift ?? null;
+    if (!shift) {
+      shift = await db.shift.findFirst({ where: { isActive: true } });
+    }
+
     const record = await db.attendance.findFirst({
       where: {
         employeeId: user.id,
@@ -229,7 +241,7 @@ export async function getTodayAttendance() {
       },
     });
 
-    return { success: true, record };
+    return { success: true, record, shift };
   } catch (error: any) {
     return { error: error.message || 'Failed to fetch today\'s attendance.' };
   }

@@ -21,6 +21,7 @@ export default async function EmployeeAttendancePage() {
       initialStats={statsRes.success ? statsRes.stats : null}
       userDisplayName={`${session.user.firstName} ${session.user.lastName}`}
       userId={session.user.id}
+      shift={todayRes.success ? (todayRes.shift ?? null) : null}
     />
   );
 }

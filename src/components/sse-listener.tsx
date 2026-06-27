@@ -24,8 +24,8 @@ export default function SSEListener() {
       }
     });
 
-    eventSource.onerror = (err) => {
-      console.error('SSE Error:', err);
+    eventSource.onerror = () => {
+      // SSE connection error — EventSource will auto-reconnect.
     };
 
     return () => {
