@@ -357,12 +357,31 @@ export default function EmployeeTaskListClient({ initialTasks, currentUser, admi
         {filteredTasks.map((task) => (
           <Card 
             key={task.id} 
-            className="bg-card border border-border hover:border-border/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200"
+            className={`bg-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${
+              task.status === 'IN_PROGRESS'
+                ? 'border border-blue-500/40 hover:border-blue-400/60 shadow-blue-500/5'
+                : 'border border-border hover:border-border/80'
+            }`}
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               {/* Left Side: Specs */}
               <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
+                  {/* Animated spinner for IN_PROGRESS */}
+                  {task.status === 'IN_PROGRESS' && (
+                    <div className="shrink-0 relative w-3.5 h-3.5">
+                      <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+                      <svg
+                        className="absolute inset-0 w-3.5 h-3.5 animate-spin"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        style={{ animationDuration: '1.2s' }}
+                      >
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="8" className="text-blue-400" />
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="20" className="text-blue-500/20" />
+                      </svg>
+                    </div>
+                  )}
                   <h3 className="text-sm font-bold text-foreground">{task.title}</h3>
                   <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${getPriorityStyles(task.priority)}`}>
                     {task.priority}

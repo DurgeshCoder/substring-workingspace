@@ -403,7 +403,11 @@ export default function AdminTaskBoardClient({
                         key={task.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, task.id)}
-                        className="group bg-background border border-border hover:border-border/80 rounded-xl p-4 transition-all duration-200 shadow-sm flex flex-col justify-between space-y-3.5 cursor-grab active:cursor-grabbing hover:shadow-md active:scale-[0.98] select-none"
+                        className={`group bg-background border rounded-xl p-4 transition-all duration-200 shadow-sm flex flex-col justify-between space-y-3.5 cursor-grab active:cursor-grabbing hover:shadow-md active:scale-[0.98] select-none ${
+                          task.status === 'IN_PROGRESS'
+                            ? 'border-blue-500/40 hover:border-blue-400/60 shadow-blue-500/5 hover:shadow-blue-500/10'
+                            : 'border-border hover:border-border/80'
+                        }`}
                       >
                         <div 
                           onClick={() => handleOpenTaskDetails(task)}
@@ -418,9 +422,25 @@ export default function AdminTaskBoardClient({
                               {task.dueDate ? format(new Date(task.dueDate), 'MMM dd') : 'No due'}
                             </span>
                           </div>
-                          <h4 className="text-xs font-bold text-foreground leading-tight group-hover:text-fuchsia-300 transition-colors line-clamp-2">
-                            {task.title}
-                          </h4>
+                          <div className="flex items-start gap-2">
+                            {task.status === 'IN_PROGRESS' && (
+                              <div className="mt-0.5 shrink-0 relative w-3.5 h-3.5">
+                                <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+                                <svg
+                                  className="absolute inset-0 w-3.5 h-3.5 animate-spin"
+                                  viewBox="0 0 14 14"
+                                  fill="none"
+                                  style={{ animationDuration: '1.2s' }}
+                                >
+                                  <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="8" className="text-blue-400" />
+                                  <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="20" className="text-blue-500/20" />
+                                </svg>
+                              </div>
+                            )}
+                            <h4 className="text-xs font-bold text-foreground leading-tight group-hover:text-fuchsia-300 transition-colors line-clamp-2">
+                              {task.title}
+                            </h4>
+                          </div>
                         </div>
 
                         <div className="flex items-center justify-between pt-2.5 border-t border-border">
