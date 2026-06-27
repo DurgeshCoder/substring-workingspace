@@ -67,6 +67,22 @@ export const formatLocalDateString = (dateInput: Date | string | null | undefine
   return `${weekday}, ${month} ${day}, ${year}`;
 };
 
+export const formatShortLocalDateString = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+  
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  const weekday = days[date.getUTCDay()];
+  const day = date.getUTCDate();
+  const month = months[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  
+  return `${weekday}, ${month} ${day}, ${year}`;
+};
+
 export const formatTimeTo12h = (timeStr: string): string => {
   const [h, m] = timeStr.split(':').map(Number);
   const date = new Date();

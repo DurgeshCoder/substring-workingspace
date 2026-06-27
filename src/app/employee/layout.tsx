@@ -80,6 +80,7 @@ export default function EmployeeLayout({
   const navigation = [
     { name: "Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
     { name: "Attendance", href: "/employee/attendance", icon: CalendarDays },
+    { name: "Leave Requests", href: "/employee/leave", icon: Briefcase },
     { name: "Task Board", href: "/employee/tasks", icon: CheckSquare },
     { name: "Task List", href: "/employee/task-list", icon: ListTodo },
     { name: "Profile", href: "/employee/profile", icon: User },

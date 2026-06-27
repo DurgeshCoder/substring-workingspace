@@ -1314,3 +1314,42 @@ export async function rejectLeave(attendanceId: string, managerComment?: string)
   }
 }
 
+export async function cancelLeaveRequest(id: string) {
+  try {
+    const user = await getSessionUser();
+    
+    // Check if the record belongs to the user and is still pending
+    const record = await db.attendance.findFirst({
+      where: {
+        id,
+        employeeId: user.id
+      }
+    });
+
+    if (!record) {
+      throw new Error('Leave request not found.');
+    }
+
+    if (record.approvalStatus !== 'PENDING') {
+      throw new Error('Approved or rejected leave requests cannot be cancelled.');
+    }
+
+    // Delete the attendance logs first
+    await db.attendanceLog.deleteMany({
+      where: { attendanceId: id }
+    });
+
+    // Delete the attendance record
+    await db.attendance.delete({
+      where: { id }
+    });
+
+    revalidatePath('/admin/attendance');
+    revalidatePath('/employee/attendance');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to cancel leave request.' };
+  }
+}
+
+

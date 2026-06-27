@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { approveLeave, rejectLeave } from '@/actions/attendance';
+import { formatShortLocalDateString, formatLocalDateString } from '../shared-helpers';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -136,7 +137,7 @@ export default function LeaveClient({ initialLeaves }: LeaveClientProps) {
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4 font-semibold text-foreground">
-                        {new Date(req.date).toLocaleDateString([], { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                        {formatShortLocalDateString(req.date)}
                       </TableCell>
                       <TableCell className="px-6 py-4 max-w-[250px] truncate font-medium text-foreground" title={req.remarks || ''}>
                         {req.remarks || 'No reason provided'}
@@ -190,7 +191,7 @@ export default function LeaveClient({ initialLeaves }: LeaveClientProps) {
                   Requested Date
                 </span>
                 <div className="text-xs font-bold text-rose-350">
-                  {new Date(selectedLeave.date).toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  {formatLocalDateString(selectedLeave.date)}
                 </div>
               </div>
 
