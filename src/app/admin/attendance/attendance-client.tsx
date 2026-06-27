@@ -12,6 +12,7 @@ import {
   Download, 
   Plus, 
   Trash2, 
+  Pencil,
   UserCheck, 
   ShieldAlert, 
   UserMinus, 
@@ -28,7 +29,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { 
   createShift, 
-  updateShift, 
+  updateShift,
+  deleteShift,
   assignShiftToEmployee, 
   createHoliday, 
   deleteHoliday, 
@@ -319,6 +321,14 @@ export default function AdminAttendanceClient({
   const [assigningShiftId, setAssigningShiftId] = useState('');
   const [loadingShiftAction, setLoadingShiftAction] = useState(false);
 
+  // Edit / Delete shift states
+  const [editingShift, setEditingShift] = useState<Shift | null>(null);
+  const [shiftToDelete, setShiftToDelete] = useState<Shift | null>(null);
+  const [deletingShiftId, setDeletingShiftId] = useState<string | null>(null);
+  const [editShiftForm, setEditShiftForm] = useState({
+    name: '', startTime: '09:00', endTime: '18:00', graceMinutes: 15, halfDayAfter: '10:30', isActive: true,
+  });
+
   // Holiday Form states
   const [newHoliday, setNewHoliday] = useState({
     title: '',
@@ -394,6 +404,65 @@ export default function AdminAttendanceClient({
       toast.error('An unexpected error occurred.');
     } finally {
       setLoadingShiftAction(false);
+    }
+  };
+
+  // Open edit form pre-filled
+  const handleOpenEditShift = (shift: Shift) => {
+    setEditingShift(shift);
+    setEditShiftForm({
+      name: shift.name,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      graceMinutes: shift.graceMinutes,
+      halfDayAfter: shift.halfDayAfter,
+      isActive: shift.isActive,
+    });
+  };
+
+  // Save edited shift
+  const handleSaveEditShift = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingShift) return;
+    setLoadingShiftAction(true);
+    try {
+      const res = await updateShift(editingShift.id, editShiftForm);
+      if (res.success && res.shift) {
+        setShifts(shifts.map(s => s.id === editingShift.id ? { ...s, ...editShiftForm, _count: s._count } : s));
+        setEditingShift(null);
+        toast.success('Shift updated successfully.');
+      } else {
+        toast.error(res.error || 'Failed to update shift.');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setLoadingShiftAction(false);
+    }
+  };
+
+  // Delete shift — open confirm dialog instead of deleting immediately
+  const handleDeleteShift = (shift: Shift) => {
+    setShiftToDelete(shift);
+  };
+
+  // Confirmed delete
+  const confirmDeleteShift = async () => {
+    if (!shiftToDelete) return;
+    setDeletingShiftId(shiftToDelete.id);
+    try {
+      const res = await deleteShift(shiftToDelete.id);
+      if (res.success) {
+        setShifts(shifts.filter(s => s.id !== shiftToDelete.id));
+        toast.success('Shift deleted successfully.');
+      } else {
+        toast.error(res.error || 'Failed to delete shift.');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setDeletingShiftId(null);
+      setShiftToDelete(null);
     }
   };
 
@@ -1177,21 +1246,45 @@ export default function AdminAttendanceClient({
                 <CardTitle className="text-lg font-bold text-foreground">Work Shifts</CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">Manage active shifts and grace settings</CardDescription>
               </CardHeader>
-
-              <CardContent className="p-0 space-y-4">
+              <CardContent className="p-0 space-y-3">
                 {shifts.map((shift) => (
                   <div key={shift.id} className="p-4 bg-background/50 border border-border/60 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <h3 className="text-sm font-bold text-foreground">{shift.name}</h3>
+                      <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        {shift.name}
+                        {shift.isActive
+                          ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ACTIVE</span>
+                          : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">INACTIVE</span>
+                        }
+                      </h3>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Timing: {shift.startTime} - {shift.endTime} | Grace: {shift.graceMinutes} min | Half-Day After: {shift.halfDayAfter}
+                        {shift.startTime} – {shift.endTime} &nbsp;&middot;&nbsp; Grace: {shift.graceMinutes} min &nbsp;&middot;&nbsp; Half-Day: {shift.halfDayAfter}
                       </p>
                     </div>
-                    <div className="text-xs font-extrabold uppercase bg-indigo-500/10 text-indigo-400 px-3 py-1.5 rounded-lg border border-indigo-500/20">
-                      {shift._count?.users ?? 0} Employees Assigned
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs font-extrabold uppercase bg-indigo-500/10 text-indigo-400 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+                        {shift._count?.users ?? 0} Assigned
+                      </span>
+                      <button
+                        onClick={() => handleOpenEditShift(shift)}
+                        className="p-2 rounded-lg border border-border hover:border-indigo-500/40 hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-400 transition-all"
+                        title="Edit shift"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteShift(shift)}
+                        className="p-2 rounded-lg border border-border hover:border-rose-500/40 hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 transition-all"
+                        title="Delete shift"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 ))}
+                {shifts.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-6">No shifts created yet.</p>
+                )}
               </CardContent>
 
               {/* Assign Shift Form */}
@@ -1919,6 +2012,124 @@ export default function AdminAttendanceClient({
           </div>
         )}
       </div>
+
+      {/* EDIT SHIFT DIALOG */}
+      <Dialog open={!!editingShift} onOpenChange={(open) => { if (!open) setEditingShift(null); }}>
+        <DialogContent className="sm:max-w-lg bg-card border border-border rounded-3xl p-6 gap-0">
+          <DialogHeader className="border-b border-border/40 pb-4 mb-5">
+            <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+              <Pencil className="w-4 h-4 text-indigo-400" />
+              Edit Shift
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Update the details for <span className="font-semibold text-foreground">{editingShift?.name}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveEditShift} className="space-y-4">
+            {/* Shift Name */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Shift Name</Label>
+              <Input
+                required
+                value={editShiftForm.name}
+                onChange={e => setEditShiftForm({ ...editShiftForm, name: e.target.value })}
+                className="text-xs bg-background border-border rounded-xl focus-visible:border-indigo-500"
+                placeholder="e.g. Morning Shift"
+              />
+            </div>
+
+            {/* Time row */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Start Time</Label>
+                <Input type="time" required value={editShiftForm.startTime}
+                  onChange={e => setEditShiftForm({ ...editShiftForm, startTime: e.target.value })}
+                  className="text-xs bg-background border-border rounded-xl focus-visible:border-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">End Time</Label>
+                <Input type="time" required value={editShiftForm.endTime}
+                  onChange={e => setEditShiftForm({ ...editShiftForm, endTime: e.target.value })}
+                  className="text-xs bg-background border-border rounded-xl focus-visible:border-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Half-Day After</Label>
+                <Input type="time" required value={editShiftForm.halfDayAfter}
+                  onChange={e => setEditShiftForm({ ...editShiftForm, halfDayAfter: e.target.value })}
+                  className="text-xs bg-background border-border rounded-xl focus-visible:border-indigo-500" />
+              </div>
+            </div>
+
+            {/* Grace + Status row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Grace Period (mins)</Label>
+                <Input type="number" min={0} max={120} required value={editShiftForm.graceMinutes}
+                  onChange={e => setEditShiftForm({ ...editShiftForm, graceMinutes: Number(e.target.value) })}
+                  className="text-xs bg-background border-border rounded-xl focus-visible:border-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Status</Label>
+                <select
+                  value={editShiftForm.isActive ? 'true' : 'false'}
+                  onChange={e => setEditShiftForm({ ...editShiftForm, isActive: e.target.value === 'true' })}
+                  className="flex h-9 w-full rounded-xl border border-border bg-background px-3 py-1 text-xs text-foreground focus:outline-none focus:border-indigo-500 transition"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-border/30 flex gap-3">
+              <Button type="button" variant="outline" onClick={() => setEditingShift(null)}
+                className="rounded-xl text-xs font-semibold">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loadingShiftAction}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2">
+                {loadingShiftAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* DELETE SHIFT CONFIRM DIALOG */}
+      <Dialog open={!!shiftToDelete} onOpenChange={(open) => { if (!open) setShiftToDelete(null); }}>
+        <DialogContent className="sm:max-w-sm bg-card border border-border rounded-3xl p-6 gap-0">
+          <DialogHeader className="pb-4 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-3">
+              <Trash2 className="w-5 h-5 text-rose-400" />
+            </div>
+            <DialogTitle className="text-base font-extrabold text-foreground text-center">
+              Delete Shift?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground text-center">
+              You are about to delete <span className="font-semibold text-foreground">&ldquo;{shiftToDelete?.name}&rdquo;</span>.
+              <br />
+              All employees assigned to this shift will be <span className="text-amber-400 font-semibold">unassigned</span>. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={() => setShiftToDelete(null)}
+              className="flex-1 rounded-xl text-xs font-semibold">
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDeleteShift}
+              disabled={!!deletingShiftId}
+              className="flex-1 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2"
+            >
+              {deletingShiftId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Yes, Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* REVIEW CORRECTION REQUEST MODAL DIALOG */}
       <Dialog open={correctionModalOpen} onOpenChange={(open) => { if (!open) setSelectedCorrection(null); }}>

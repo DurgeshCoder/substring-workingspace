@@ -125,6 +125,35 @@ export async function assignShiftToEmployee(employeeId: string, shiftId: string 
   }
 }
 
+export async function deleteShift(id: string) {
+  try {
+    const user = await getSessionUser();
+    if (user.role !== 'ADMIN') throw new Error('Admin access required.');
+
+    // Unassign any employees on this shift first
+    await db.user.updateMany({
+      where: { shiftId: id },
+      data: { shiftId: null },
+    });
+
+    const shift = await db.shift.delete({ where: { id } });
+
+    await db.activityLog.create({
+      data: {
+        action: `Deleted Shift: ${shift.name}`,
+        entityType: 'Shift',
+        entityId: shift.id,
+        performedBy: `${user.firstName} ${user.lastName}`,
+      },
+    });
+
+    revalidatePath('/admin/attendance');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to delete shift.' };
+  }
+}
+
 // -------------------------------------------------------------
 // HOLIDAY MANAGEMENT
 // -------------------------------------------------------------
