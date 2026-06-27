@@ -96,6 +96,7 @@ export default function AdminLayout({
       subItems: [
         { name: "Overview", href: "/admin/attendance/overview" },
         { name: "Corrections", href: "/admin/attendance/correction" },
+        { name: "Leave Requests", href: "/admin/attendance/leave" },
         { name: "Manual Logs", href: "/admin/attendance/manual" },
         { name: "Work Shifts", href: "/admin/attendance/shifts" },
         { name: "Holidays", href: "/admin/attendance/holidays" },

@@ -35,6 +35,7 @@ export default function OverviewClient({ initialStats }: OverviewClientProps) {
 
   const links = [
     { name: 'Corrections', href: '/admin/attendance/correction', description: 'Review & approve check-in/out edits', count: stats?.pendingApprovals ?? 0, color: 'text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/5' },
+    { name: 'Leave Requests', href: '/admin/attendance/leave', description: 'Approve or reject employee leaves', count: stats?.pendingLeaves ?? 0, color: 'text-rose-400 border-rose-500/20 hover:bg-rose-500/5' },
     { name: 'Manual Entry', href: '/admin/attendance/manual', description: 'Override/insert log records manually', color: 'text-fuchsia-400 border-fuchsia-500/20 hover:bg-fuchsia-500/5' },
     { name: 'Work Shifts', href: '/admin/attendance/shifts', description: 'Configure active timing settings & grace periods', color: 'text-blue-400 border-blue-500/20 hover:bg-blue-500/5' },
     { name: 'Holidays', href: '/admin/attendance/holidays', description: 'Manage calendar holidays and days off', color: 'text-rose-400 border-rose-500/20 hover:bg-rose-500/5' },
