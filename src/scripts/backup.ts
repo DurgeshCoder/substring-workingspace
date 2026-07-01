@@ -4,23 +4,13 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
+import { getMariaDbConfig } from '../lib/db';
+
 dotenv.config();
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error('DATABASE_URL is not set in environment variables.');
-}
-
-function getMariaDbConfig(databaseUrl: string) {
-  const url = new URL(databaseUrl);
-  return {
-    host: url.hostname || 'localhost',
-    port: url.port ? parseInt(url.port) : 3306,
-    user: decodeURIComponent(url.username),
-    password: decodeURIComponent(url.password),
-    database: url.pathname.substring(1),
-    allowPublicKeyRetrieval: true,
-  };
 }
 
 const config = getMariaDbConfig(databaseUrl);

@@ -3,7 +3,7 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
-function getMariaDbConfig(databaseUrl: string) {
+export function getMariaDbConfig(databaseUrl: string) {
   try {
     const url = new URL(databaseUrl);
     
@@ -23,39 +23,56 @@ function getMariaDbConfig(databaseUrl: string) {
       allowPublicKeyRetrieval: true,
     };
 
-    // Configure connection limit (default to 5 to prevent database connection exhaustion in production)
-    if (connectionLimitParam) {
+    // Configure connection limit (prioritize environment variables, then query parameters, then default to 5)
+    const connectionLimitEnv = process.env.DATABASE_POOL_LIMIT || process.env.DATABASE_CONNECTION_LIMIT;
+    if (connectionLimitEnv) {
+      config.connectionLimit = parseInt(connectionLimitEnv, 10);
+    } else if (connectionLimitParam) {
       config.connectionLimit = parseInt(connectionLimitParam, 10);
     } else {
       config.connectionLimit = 5;
     }
 
-    // Configure acquire timeout (default to 20000ms to allow recovery under transient database load)
-    if (acquireTimeoutParam) {
+    // Configure acquire timeout (prioritize environment variables, then query parameters, then default to 20000ms)
+    const acquireTimeoutEnv = process.env.DATABASE_POOL_TIMEOUT || process.env.DATABASE_ACQUIRE_TIMEOUT;
+    if (acquireTimeoutEnv) {
+      config.acquireTimeout = parseInt(acquireTimeoutEnv, 10);
+    } else if (acquireTimeoutParam) {
       config.acquireTimeout = parseInt(acquireTimeoutParam, 10);
     } else {
       config.acquireTimeout = 20000;
     }
 
-    // Configure connect timeout (default to 15000ms to be robust)
-    if (connectTimeoutParam) {
+    // Configure connect timeout (prioritize environment variables, then query parameters, then default to 15000ms)
+    const connectTimeoutEnv = process.env.DATABASE_CONNECT_TIMEOUT;
+    if (connectTimeoutEnv) {
+      config.connectTimeout = parseInt(connectTimeoutEnv, 10);
+    } else if (connectTimeoutParam) {
       config.connectTimeout = parseInt(connectTimeoutParam, 10);
     } else {
       config.connectTimeout = 15000;
     }
 
     // Determine SSL/TLS settings
-    if (sslParam === 'true' || sslParam === '1') {
-      config.ssl = true;
-    } else if (sslParam === 'false' || sslParam === '0') {
-      config.ssl = false;
-    } else if (sslmodeParam && sslmodeParam.toLowerCase() !== 'disable') {
-      config.ssl = true;
-      if (sslmodeParam.toLowerCase() === 'prefer' || sslmodeParam.toLowerCase() === 'require') {
+    const hasSsl = sslParam === 'true' || sslParam === '1' || (sslmodeParam && sslmodeParam.toLowerCase() !== 'disable');
+    const disableSsl = sslParam === 'false' || sslParam === '0' || (sslmodeParam && sslmodeParam.toLowerCase() === 'disable');
+
+    if (hasSsl) {
+      const caCert = process.env.DATABASE_CA_CERT || process.env.MYSQL_ATTR_SSL_CA;
+      if (caCert) {
+        config.ssl = {
+          ca: caCert,
+          rejectUnauthorized: true
+        };
+      } else {
+        // Default to rejectUnauthorized: false to allow connection to managed/cloud databases
+        // without certificate validation errors (very common in Serverless and hosting providers)
         config.ssl = {
           rejectUnauthorized: false
         };
       }
+    } else if (disableSsl) {
+      config.ssl = false;
     }
 
     return config;
@@ -80,6 +97,13 @@ function createPrismaClient() {
     const adapter = new PrismaMariaDb(config, {
       onConnectionError: (err) => {
         console.error('Prisma MariaDB connection error:', err);
+        if (err && typeof err === 'object') {
+          try {
+            console.error('Prisma MariaDB error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+          } catch (jsonErr) {
+            console.error('Failed to serialize connection error:', jsonErr);
+          }
+        }
       }
     });
 

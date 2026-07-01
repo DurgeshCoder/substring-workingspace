@@ -52,17 +52,25 @@ function getMariaDbConfig(databaseUrl: string) {
     }
 
     // Determine SSL/TLS settings
-    if (sslParam === 'true' || sslParam === '1') {
-      config.ssl = true;
-    } else if (sslParam === 'false' || sslParam === '0') {
-      config.ssl = false;
-    } else if (sslmodeParam && sslmodeParam.toLowerCase() !== 'disable') {
-      config.ssl = true;
-      if (sslmodeParam.toLowerCase() === 'prefer' || sslmodeParam.toLowerCase() === 'require') {
+    const hasSsl = sslParam === 'true' || sslParam === '1' || (sslmodeParam && sslmodeParam.toLowerCase() !== 'disable');
+    const disableSsl = sslParam === 'false' || sslParam === '0' || (sslmodeParam && sslmodeParam.toLowerCase() === 'disable');
+
+    if (hasSsl) {
+      const caCert = process.env.DATABASE_CA_CERT || process.env.MYSQL_ATTR_SSL_CA;
+      if (caCert) {
+        config.ssl = {
+          ca: caCert,
+          rejectUnauthorized: true
+        };
+      } else {
+        // Default to rejectUnauthorized: false to allow connection to managed/cloud databases
+        // without certificate validation errors (very common in Serverless and hosting providers)
         config.ssl = {
           rejectUnauthorized: false
         };
       }
+    } else if (disableSsl) {
+      config.ssl = false;
     }
 
     return config;
