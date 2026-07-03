@@ -94,6 +94,7 @@ export default function AdminLayout({
       href: "/admin/attendance",
       icon: CalendarDays,
       subItems: [
+        { name: "Mark Attendance", href: "/admin/attendance/mark" },
         { name: "Overview", href: "/admin/attendance/overview" },
         { name: "Corrections", href: "/admin/attendance/correction" },
         { name: "Leave Requests", href: "/admin/attendance/leave" },

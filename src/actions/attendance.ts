@@ -395,7 +395,13 @@ export async function checkIn(data: {
       });
     }
 
-    revalidatePath('/employee/dashboard');
+    if (user.role === 'ADMIN') {
+      revalidatePath('/admin/dashboard');
+      revalidatePath('/admin/attendance/mark');
+    } else {
+      revalidatePath('/employee/dashboard');
+      revalidatePath('/employee/attendance');
+    }
     return { success: true, record };
   } catch (error: any) {
     return { error: error.message || 'Failed to check in.' };
@@ -482,7 +488,13 @@ export async function checkOut(id: string) {
       message: `You checked out at ${checkOutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Total hours: ${Math.floor(actualWorkingMinutes / 60)}h ${actualWorkingMinutes % 60}m.`,
     });
 
-    revalidatePath('/employee/dashboard');
+    if (user.role === 'ADMIN') {
+      revalidatePath('/admin/dashboard');
+      revalidatePath('/admin/attendance/mark');
+    } else {
+      revalidatePath('/employee/dashboard');
+      revalidatePath('/employee/attendance');
+    }
     return { success: true, record: updatedRecord };
   } catch (error: any) {
     return { error: error.message || 'Failed to check out.' };
@@ -683,7 +695,13 @@ export async function raiseCorrection(
       });
     });
 
-    revalidatePath('/employee/dashboard');
+    if (user.role === 'ADMIN') {
+      revalidatePath('/admin/dashboard');
+      revalidatePath('/admin/attendance/mark');
+    } else {
+      revalidatePath('/employee/dashboard');
+      revalidatePath('/employee/attendance');
+    }
     return { success: true, correction };
   } catch (error: any) {
     return { error: error.message || 'Failed to submit correction request.' };
@@ -831,6 +849,9 @@ export async function approveCorrection(correctionId: string, managerComment?: s
     });
 
     revalidatePath('/admin/dashboard');
+    revalidatePath('/admin/attendance/correction');
+    revalidatePath('/employee/dashboard');
+    revalidatePath('/employee/attendance');
     return { success: true, correction: updatedCorrection };
   } catch (error: any) {
     return { error: error.message || 'Failed to approve correction.' };
@@ -876,6 +897,9 @@ export async function rejectCorrection(correctionId: string, managerComment?: st
     });
 
     revalidatePath('/admin/dashboard');
+    revalidatePath('/admin/attendance/correction');
+    revalidatePath('/employee/dashboard');
+    revalidatePath('/employee/attendance');
     return { success: true, correction: updatedCorrection };
   } catch (error: any) {
     return { error: error.message || 'Failed to reject correction.' };
@@ -1027,6 +1051,10 @@ export async function addManualAttendance(data: {
     });
 
     revalidatePath('/admin/employees');
+    revalidatePath('/admin/attendance/overview');
+    revalidatePath('/admin/attendance/manual');
+    revalidatePath('/employee/dashboard');
+    revalidatePath('/employee/attendance');
     return { success: true, record };
   } catch (error: any) {
     return { error: error.message || 'Failed to apply manual attendance.' };
@@ -1192,7 +1220,13 @@ export async function requestLeave(dateStr: string, reason: string) {
       });
     });
 
-    revalidatePath('/employee/dashboard');
+    if (user.role === 'ADMIN') {
+      revalidatePath('/admin/dashboard');
+      revalidatePath('/admin/attendance/mark');
+    } else {
+      revalidatePath('/employee/dashboard');
+      revalidatePath('/employee/attendance');
+    }
     return { success: true, record };
   } catch (error: any) {
     return { error: error.message || 'Failed to submit leave request.' };
