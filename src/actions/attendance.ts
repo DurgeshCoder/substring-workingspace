@@ -1386,4 +1386,54 @@ export async function cancelLeaveRequest(id: string) {
   }
 }
 
+export async function getProcessedLeaves(month: number, year: number) {
+  try {
+    const user = await getSessionUser();
+    if (user.role !== 'ADMIN') {
+      return { error: 'Unauthorized. Manager/Admin role required.' };
+    }
+
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+    const leaves = await db.attendance.findMany({
+      where: {
+        approvalStatus: { in: ['APPROVED', 'REJECTED'] },
+        logs: {
+          some: {
+            action: 'LEAVE_REQUESTED',
+          },
+        },
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            employeeCode: true,
+          },
+        },
+        approvedBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+          }
+        }
+      },
+      orderBy: { date: 'desc' },
+    });
+
+    return { success: true, leaves };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to fetch processed leaves.' };
+  }
+}
+
+
 
