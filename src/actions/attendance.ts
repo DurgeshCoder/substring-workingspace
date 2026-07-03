@@ -1445,10 +1445,12 @@ export async function getDailyAttendance(dateStr: string) {
     const [year, month, day] = dateStr.split('-').map(Number);
     const dateObj = new Date(Date.UTC(year, month - 1, day));
 
-    // 1. Get all active employees
+    // 1. Get all active employees and administrators
     const employees = await db.user.findMany({
       where: {
-        role: 'EMPLOYEE',
+        role: {
+          in: ['EMPLOYEE', 'ADMIN'],
+        },
       },
       select: {
         id: true,
@@ -1456,6 +1458,7 @@ export async function getDailyAttendance(dateStr: string) {
         lastName: true,
         employeeCode: true,
         email: true,
+        role: true,
         department: {
           select: {
             name: true,

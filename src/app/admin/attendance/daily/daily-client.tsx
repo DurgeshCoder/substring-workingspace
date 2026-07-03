@@ -31,6 +31,8 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { formatTime12h, formatShortLocalDateString } from '../shared-helpers';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 interface DailyAttendanceItem {
   employee: {
@@ -39,6 +41,7 @@ interface DailyAttendanceItem {
     lastName: string;
     employeeCode: string;
     email: string;
+    role: string;
     department: {
       name: string;
     } | null;
@@ -68,7 +71,9 @@ interface DailyAttendanceClientProps {
 
 export default function DailyAttendanceClient({ initialData, selectedDate }: DailyAttendanceClientProps) {
   const router = useRouter();
-  const [dateInput, setDateInput] = useState(selectedDate);
+  const [date, setDate] = useState<Date | undefined>(
+    selectedDate ? new Date(selectedDate) : new Date()
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [deptFilter, setDeptFilter] = useState('ALL');
@@ -82,12 +87,14 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
     setCurrentPage(1);
   }, [searchTerm, statusFilter, deptFilter]);
 
-  // Handle date input change and trigger server fetch
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value;
-    setDateInput(newDate);
+  const handleDateSelect = (newDate: Date | undefined) => {
+    setDate(newDate);
     if (newDate) {
-      router.push(`/admin/attendance/daily?date=${newDate}`);
+      const yyyy = newDate.getFullYear();
+      const mm = String(newDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(newDate.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+      router.push(`/admin/attendance/daily?date=${dateStr}`);
     }
   };
 
@@ -100,6 +107,13 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
     )
   );
 
+  // Check if selected date is in the future compared to today's date
+  const selectedDateObj = new Date(selectedDate);
+  selectedDateObj.setHours(0, 0, 0, 0);
+  const todayObj = new Date();
+  todayObj.setHours(0, 0, 0, 0);
+  const isFutureDate = selectedDateObj.getTime() > todayObj.getTime();
+
   // Day statistics (computed on total dataset for the selected date)
   const totalStaff = initialData.length;
   const presentCount = initialData.filter(item => 
@@ -109,7 +123,7 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
   const lateCount = initialData.filter(item => 
     item.attendance && item.attendance.lateMinutes > 0
   ).length;
-  const absentCount = initialData.filter(item => 
+  const absentCount = isFutureDate ? 0 : initialData.filter(item => 
     !item.attendance || 
     item.attendance.status === 'ABSENT'
   ).length;
@@ -119,6 +133,7 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
   const leaveCount = initialData.filter(item => 
     item.attendance?.status === 'ON_LEAVE'
   ).length;
+  const notMarkedCount = isFutureDate ? initialData.filter(item => !item.attendance).length : 0;
 
   // Filter logic
   const filteredData = initialData.filter(item => {
@@ -132,10 +147,13 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
     }
 
     // 2. Status match
-    const status = item.attendance?.status || 'ABSENT';
+    const status = item.attendance?.status || (isFutureDate ? 'NOT_MARKED' : 'ABSENT');
     if (statusFilter !== 'ALL') {
       if (statusFilter === 'ABSENT') {
+        if (isFutureDate) return false;
         if (item.attendance && status !== 'ABSENT') return false;
+      } else if (statusFilter === 'NOT_MARKED') {
+        if (item.attendance) return false;
       } else if (status !== statusFilter) {
         return false;
       }
@@ -178,6 +196,8 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
         return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
       case 'HALF_DAY':
         return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20';
+      case 'NOT_MARKED':
+        return 'bg-muted text-muted-foreground border-border';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
@@ -196,15 +216,28 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
           </p>
         </div>
 
-        {/* Date Selector input */}
+        {/* Date Selector Popover (Shadcn UI) */}
         <div className="flex items-center space-x-2 shrink-0">
-          <CalendarIcon className="w-4.5 h-4.5 text-indigo-400" />
-          <Input
-            type="date"
-            value={dateInput}
-            onChange={handleDateChange}
-            className="w-[160px] bg-card border border-border text-xs rounded-xl h-9.5 text-foreground cursor-pointer focus:outline-none focus:border-indigo-500"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[220px] justify-start text-left font-normal text-xs border border-border bg-card rounded-xl h-9.5 transition-colors cursor-pointer text-foreground hover:bg-muted"
+                )}
+              >
+                <CalendarIcon className="w-4 h-4 mr-2 text-indigo-400" />
+                {date ? format(date, "PPP") : <span>Pick Date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-card border border-border rounded-xl" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -234,11 +267,18 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
 
         <Card className="bg-card border-border shadow-sm hover:border-rose-500/20 transition-colors">
           <CardContent className="p-4 flex flex-col justify-between">
-            <span className="text-[10px] uppercase font-bold text-rose-400">Absent</span>
-            <p className="text-xl font-black text-foreground mt-1">{absentCount}</p>
+            <span className={cn(
+              "text-[10px] uppercase font-bold",
+              isFutureDate ? "text-muted-foreground" : "text-rose-400"
+            )}>
+              {isFutureDate ? "Not Marked" : "Absent"}
+            </span>
+            <p className="text-xl font-black text-foreground mt-1">
+              {isFutureDate ? notMarkedCount : absentCount}
+            </p>
             <div className="flex items-center text-[9px] text-muted-foreground mt-3 gap-1">
-              <XCircle className="w-3 h-3 text-rose-500" />
-              <span>Missing records</span>
+              <XCircle className={cn("w-3 h-3", isFutureDate ? "text-muted-foreground" : "text-rose-500")} />
+              <span>{isFutureDate ? "Unmarked future schedule" : "Missing records"}</span>
             </div>
           </CardContent>
         </Card>
@@ -296,6 +336,7 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
               <option value="ALL">All Statuses</option>
               <option value="PRESENT">PRESENT</option>
               <option value="ABSENT">ABSENT</option>
+              <option value="NOT_MARKED">NOT MARKED</option>
               <option value="ON_LEAVE">ON LEAVE</option>
               <option value="WFH">WFH</option>
               <option value="HALF_DAY">HALF DAY</option>
@@ -341,14 +382,21 @@ export default function DailyAttendanceClient({ initialData, selectedDate }: Dai
               <TableBody className="divide-y divide-border">
                 {paginatedData.map((item) => {
                   const hasRecord = !!item.attendance;
-                  const status = item.attendance?.status || 'ABSENT';
+                  const status = item.attendance?.status || (isFutureDate ? 'NOT_MARKED' : 'ABSENT');
                   
                   return (
                     <TableRow key={item.employee.id} className="hover:bg-muted/20 transition-colors">
                       <TableCell className="px-6 py-4">
                         <div>
-                          <div className="font-bold text-foreground">
-                            {item.employee.firstName} {item.employee.lastName}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-foreground">
+                              {item.employee.firstName} {item.employee.lastName}
+                            </span>
+                            {item.employee.role === 'ADMIN' && (
+                              <span className="px-1.5 py-0.2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded text-[8px] font-extrabold uppercase tracking-wider">
+                                Admin
+                              </span>
+                            )}
                           </div>
                           <div className="text-[10px] text-muted-foreground font-mono uppercase mt-0.5">
                             {item.employee.employeeCode}
