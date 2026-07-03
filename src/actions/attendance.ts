@@ -1435,5 +1435,85 @@ export async function getProcessedLeaves(month: number, year: number) {
   }
 }
 
+export async function getDailyAttendance(dateStr: string) {
+  try {
+    const user = await getSessionUser();
+    if (user.role !== 'ADMIN') {
+      return { error: 'Unauthorized. Manager/Admin role required.' };
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
+
+    // 1. Get all active employees
+    const employees = await db.user.findMany({
+      where: {
+        role: 'EMPLOYEE',
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        employeeCode: true,
+        email: true,
+        department: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        firstName: 'asc',
+      },
+    });
+
+    // 2. Get all attendance records for this date
+    const attendanceRecords = await db.attendance.findMany({
+      where: {
+        date: dateObj,
+      },
+      include: {
+        approvedBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    // Match them
+    const recordMap = new Map(attendanceRecords.map(r => [r.employeeId, r]));
+
+    const dailyData = employees.map(emp => {
+      const record = recordMap.get(emp.id);
+      return {
+        employee: emp,
+        attendance: record ? {
+          id: record.id,
+          date: record.date,
+          checkIn: record.checkIn,
+          checkOut: record.checkOut,
+          status: record.status,
+          workingMinutes: record.workingMinutes,
+          breakMinutes: record.breakMinutes,
+          overtimeMinutes: record.overtimeMinutes,
+          lateMinutes: record.lateMinutes,
+          address: record.address,
+          device: record.device,
+          approvalStatus: record.approvalStatus,
+          approvedBy: record.approvedBy,
+          remarks: record.remarks,
+        } : null,
+      };
+    });
+
+    return { success: true, dailyData };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to fetch daily attendance.' };
+  }
+}
+
+
 
 
