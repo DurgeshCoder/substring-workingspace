@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Download, 
@@ -9,9 +9,12 @@ import {
   LayoutList,
   Calendar as CalendarIcon,
   Clock,
-  UserCheck
+  UserCheck,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { getAttendanceReport, addManualAttendance } from '@/actions/attendance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,6 +91,14 @@ export default function ReportClient({ employees, departments, initialHolidays }
     status: '',
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, reportViewMode]);
+
   // Manual Override Modal states (when clicking Calendar cells or Override buttons)
   const [selectedDayOverride, setSelectedDayOverride] = useState<any>(null);
   const [overrideForm, setOverrideForm] = useState({
@@ -103,6 +114,7 @@ export default function ReportClient({ employees, departments, initialHolidays }
   const handleFetchReport = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoadingReport(true);
+    setCurrentPage(1);
     try {
       const res = await getAttendanceReport(filters);
       if (res.success && res.records) {
@@ -701,77 +713,160 @@ export default function ReportClient({ employees, departments, initialHolidays }
                   </div>
                 </div>
               ) : (
-                <div className="overflow-x-auto border border-border rounded-2xl">
-                  <Table className="text-xs">
-                    <TableHeader className="bg-muted">
-                      <TableRow>
-                        <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Employee</TableHead>
-                        <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Date</TableHead>
-                        <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Timings</TableHead>
-                        <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Working Time</TableHead>
-                        <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Late / Overtime</TableHead>
-                        <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Status</TableHead>
-                        <TableHead className="px-6 py-4 text-right font-bold uppercase text-muted-foreground">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reportRecords.map((r) => (
-                        <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
-                          <TableCell className="px-6 py-4">
-                            <div className="font-bold text-foreground">
-                              {r.employee.firstName} {r.employee.lastName}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-mono uppercase mt-0.5">
-                              {r.employee.employeeCode} | {r.employee.department?.name || 'N/A'}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 font-semibold">
-                            {formatLocalDateString(r.date)}
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <div className="font-mono text-muted-foreground text-[11px]">
-                              IN: {r.checkIn ? formatTime12h(r.checkIn) : '--:--'}
-                            </div>
-                            <div className="font-mono text-muted-foreground text-[11px] mt-0.5">
-                              OUT: {r.checkOut ? formatTime12h(r.checkOut) : '--:--'}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 font-semibold">
-                            {r.workingMinutes 
-                              ? `${Math.floor(r.workingMinutes / 60)}h ${r.workingMinutes % 60}m` 
-                              : '--'}
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <div className="text-yellow-400 font-semibold">{r.lateMinutes > 0 ? `Late: ${r.lateMinutes} min` : '--'}</div>
-                            <div className="text-emerald-400 font-semibold mt-0.5">{r.overtimeMinutes > 0 ? `OT: ${r.overtimeMinutes} min` : '--'}</div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4">
-                            <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase border ${
-                              r.status === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                              r.status === 'LATE' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                              r.status === 'HALF_DAY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                              r.status === 'ON_LEAVE' || r.status === 'LEAVE' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                              r.status === 'HOLIDAY' ? 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20' :
-                              'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                            }`}>
-                              {r.status}
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-right">
-                            <Button
-                              onClick={() => handleOpenOverride(r)}
-                              size="sm"
-                              variant="outline"
-                              className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl cursor-pointer"
-                            >
-                              Override
-                            </Button>
-                          </TableCell>
+                <>
+                  <div className="overflow-x-auto border border-border rounded-2xl">
+                    <Table className="text-xs">
+                      <TableHeader className="bg-muted">
+                        <TableRow>
+                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Employee</TableHead>
+                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Date</TableHead>
+                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Timings</TableHead>
+                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Working Time</TableHead>
+                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Late / Overtime</TableHead>
+                          <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Status</TableHead>
+                          <TableHead className="px-6 py-4 text-right font-bold uppercase text-muted-foreground">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {(() => {
+                          const startIndex = (currentPage - 1) * recordsPerPage;
+                          const endIndex = startIndex + recordsPerPage;
+                          const paginatedRecords = reportRecords.slice(startIndex, endIndex);
+                          return paginatedRecords.map((r) => (
+                            <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
+                              <TableCell className="px-6 py-4">
+                                <div className="font-bold text-foreground">
+                                  {r.employee.firstName} {r.employee.lastName}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground font-mono uppercase mt-0.5">
+                                  {r.employee.employeeCode} | {r.employee.department?.name || 'N/A'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 font-semibold">
+                                {formatLocalDateString(r.date)}
+                              </TableCell>
+                              <TableCell className="px-6 py-4">
+                                <div className="font-mono text-muted-foreground text-[11px]">
+                                  IN: {r.checkIn ? formatTime12h(r.checkIn) : '--:--'}
+                                </div>
+                                <div className="font-mono text-muted-foreground text-[11px] mt-0.5">
+                                  OUT: {r.checkOut ? formatTime12h(r.checkOut) : '--:--'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 font-semibold">
+                                {r.workingMinutes 
+                                  ? `${Math.floor(r.workingMinutes / 60)}h ${r.workingMinutes % 60}m` 
+                                  : '--'}
+                              </TableCell>
+                              <TableCell className="px-6 py-4">
+                                <div className="text-yellow-400 font-semibold">{r.lateMinutes > 0 ? `Late: ${r.lateMinutes} min` : '--'}</div>
+                                <div className="text-emerald-400 font-semibold mt-0.5">{r.overtimeMinutes > 0 ? `OT: ${r.overtimeMinutes} min` : '--'}</div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4">
+                                <span className={`inline-block px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase border ${
+                                  r.status === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                  r.status === 'LATE' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                  r.status === 'HALF_DAY' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                  r.status === 'ON_LEAVE' || r.status === 'LEAVE' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                  r.status === 'HOLIDAY' ? 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20' :
+                                  'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                }`}>
+                                  {r.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 text-right">
+                                <Button
+                                  onClick={() => handleOpenTableOverride(r)}
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl cursor-pointer"
+                                >
+                                  Override
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ));
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {(() => {
+                    const totalItems = reportRecords.length;
+                    const totalPages = Math.ceil(totalItems / recordsPerPage);
+                    if (totalPages <= 1) return null;
+
+                    return (
+                      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-background/50 border border-border rounded-2xl p-4 shadow-sm">
+                        <div className="text-xs text-muted-foreground font-medium">
+                          Showing <span className="font-semibold text-foreground">{(currentPage - 1) * recordsPerPage + 1}</span> to{' '}
+                          <span className="font-semibold text-foreground">
+                            {Math.min(currentPage * recordsPerPage, totalItems)}
+                          </span>{' '}
+                          of <span className="font-semibold text-foreground">{totalItems}</span> records
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="w-8 h-8 rounded-lg border-border hover:bg-muted cursor-pointer"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </Button>
+
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                            if (
+                              page === 1 ||
+                              page === totalPages ||
+                              Math.abs(page - currentPage) <= 1
+                            ) {
+                              return (
+                                <Button
+                                  key={page}
+                                  variant={currentPage === page ? 'default' : 'outline'}
+                                  size="sm"
+                                  className={cn(
+                                    'w-8 h-8 rounded-lg text-xs font-semibold cursor-pointer',
+                                    currentPage === page
+                                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-md'
+                                      : 'border-border hover:bg-muted'
+                                  )}
+                                  onClick={() => setCurrentPage(page)}
+                                >
+                                  {page}
+                                </Button>
+                              );
+                            }
+                            if (
+                              (page === 2 && currentPage > 3) ||
+                              (page === totalPages - 1 && currentPage < totalPages - 2)
+                            ) {
+                              return (
+                                <span key={page} className="px-1 text-xs text-muted-foreground select-none">
+                                  ...
+                                </span>
+                              );
+                            }
+                            return null;
+                          })}
+
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="w-8 h-8 rounded-lg border-border hover:bg-muted cursor-pointer"
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
               )}
             </CardContent>
           </Card>

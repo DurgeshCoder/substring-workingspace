@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { updateTaskStatus, getComments, createComment, createTask } from '@/actions/tasks';
 import { 
   CheckSquare, 
@@ -9,6 +9,7 @@ import {
   Loader2, 
   ArrowRight,
   ChevronRight,
+  ChevronLeft,
   Play,
   CheckCircle,
   Eye,
@@ -75,6 +76,14 @@ export default function EmployeeTaskListClient({ initialTasks, currentUser, admi
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [filterPriority, setFilterPriority] = useState<string>('ALL');
   const [filterDate, setFilterDate] = useState<string>('ALL');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterPriority, filterDate]);
 
   // Comments state variables
   const [comments, setComments] = useState<any[]>([]);
@@ -353,134 +362,217 @@ export default function EmployeeTaskListClient({ initialTasks, currentUser, admi
       </div>
 
       {/* Task List Grid */}
-      <div className="space-y-3">
-        {filteredTasks.map((task) => (
-          <Card 
-            key={task.id} 
-            className={`bg-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${
-              task.status === 'IN_PROGRESS'
-                ? 'border border-blue-500/40 hover:border-blue-400/60 shadow-blue-500/5'
-                : 'border border-border hover:border-border/80'
-            }`}
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              {/* Left Side: Specs */}
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Animated spinner for IN_PROGRESS */}
-                  {task.status === 'IN_PROGRESS' && (
-                    <div className="shrink-0 relative w-3.5 h-3.5">
-                      <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
-                      <svg
-                        className="absolute inset-0 w-3.5 h-3.5 animate-spin"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        style={{ animationDuration: '1.2s' }}
-                      >
-                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="8" className="text-blue-400" />
-                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="20" className="text-blue-500/20" />
-                      </svg>
+      {(() => {
+        const totalItems = filteredTasks.length;
+        const totalPages = Math.ceil(totalItems / tasksPerPage);
+        const paginatedTasks = filteredTasks.slice(
+          (currentPage - 1) * tasksPerPage,
+          currentPage * tasksPerPage
+        );
+
+        return (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {paginatedTasks.map((task) => (
+                <Card 
+                  key={task.id} 
+                  className={`bg-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${
+                    task.status === 'IN_PROGRESS'
+                      ? 'border border-blue-500/40 hover:border-blue-400/60 shadow-blue-500/5'
+                      : 'border border-border hover:border-border/80'
+                  }`}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* Left Side: Specs */}
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Animated spinner for IN_PROGRESS */}
+                        {task.status === 'IN_PROGRESS' && (
+                          <div className="shrink-0 relative w-3.5 h-3.5">
+                            <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+                            <svg
+                              className="absolute inset-0 w-3.5 h-3.5 animate-spin"
+                              viewBox="0 0 14 14"
+                              fill="none"
+                              style={{ animationDuration: '1.2s' }}
+                            >
+                              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="8" className="text-blue-400" />
+                              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="22" strokeDashoffset="20" className="text-blue-500/20" />
+                            </svg>
+                          </div>
+                        )}
+                        <h3 className="text-sm font-bold text-foreground">{task.title}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${getPriorityStyles(task.priority)}`}>
+                          {task.priority}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold border ${getStatusStyles(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </div>
+                      {task.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed max-w-2xl">
+                          {task.description}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  <h3 className="text-sm font-bold text-foreground">{task.title}</h3>
-                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${getPriorityStyles(task.priority)}`}>
-                    {task.priority}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold border ${getStatusStyles(task.status)}`}>
-                    {task.status}
-                  </span>
-                </div>
-                {task.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed max-w-2xl">
-                    {task.description}
-                  </p>
-                )}
-              </div>
 
-              {/* Right Side: Assigner, Due Date & Actions */}
-              <div className="flex flex-wrap items-center gap-6 shrink-0 md:border-l border-border md:pl-6 pt-3 md:pt-0">
-                <div className="space-y-0.5 text-xs">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Assigned By</p>
-                  <p className="font-semibold text-foreground flex items-center">
-                    <User className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-                    By {task.assignedBy.firstName}
-                  </p>
-                </div>
+                    {/* Right Side: Assigner, Due Date & Actions */}
+                    <div className="flex flex-wrap items-center gap-6 shrink-0 md:border-l border-border md:pl-6 pt-3 md:pt-0">
+                      <div className="space-y-0.5 text-xs">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Assigned By</p>
+                        <p className="font-semibold text-foreground flex items-center">
+                          <User className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                          By {task.assignedBy.firstName}
+                        </p>
+                      </div>
 
-                <div className="space-y-0.5 text-xs">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Due Date</p>
-                  <p className="font-semibold text-foreground flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-                    {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'No due date'}
-                  </p>
-                </div>
+                      <div className="space-y-0.5 text-xs">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Due Date</p>
+                        <p className="font-semibold text-foreground flex items-center">
+                          <Calendar className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                          {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'No due date'}
+                        </p>
+                      </div>
 
-                {/* Operations */}
-                <div className="flex items-center gap-2">
-                  {isLoading === task.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  ) : (
-                    <>
-                      {task.status === 'TODO' && (
+                      {/* Operations */}
+                      <div className="flex items-center gap-2">
+                        {isLoading === task.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        ) : (
+                          <>
+                            {task.status === 'TODO' && (
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => handleStatusUpdate(task.id, 'IN_PROGRESS')}
+                                className="h-7 text-[10px] border-blue-500/20 text-blue-400 hover:bg-blue-500/10 cursor-pointer"
+                              >
+                                <Play className="w-3 h-3 mr-1" />
+                                <span>Start</span>
+                              </Button>
+                            )}
+                            {task.status === 'IN_PROGRESS' && (
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => handleStatusUpdate(task.id, 'REVIEW')}
+                                className="h-7 text-[10px] border-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/10 cursor-pointer"
+                              >
+                                <ChevronRight className="w-3 h-3 mr-1" />
+                                <span>Review</span>
+                              </Button>
+                            )}
+                            {task.status === 'REVIEW' && (
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => handleStatusUpdate(task.id, 'COMPLETED')}
+                                className="h-7 text-[10px] border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                <span>Done</span>
+                              </Button>
+                            )}
+                          </>
+                        )}
+                        
                         <Button
                           size="xs"
-                          variant="outline"
-                          onClick={() => handleStatusUpdate(task.id, 'IN_PROGRESS')}
-                          className="h-7 text-[10px] border-blue-500/20 text-blue-400 hover:bg-blue-500/10 cursor-pointer"
+                          onClick={() => handleOpenTaskDetails(task)}
+                          className="h-7 px-2.5 text-[10px] bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl cursor-pointer flex items-center gap-1"
                         >
-                          <Play className="w-3 h-3 mr-1" />
-                          <span>Start</span>
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Specs & Chat</span>
                         </Button>
-                      )}
-                      {task.status === 'IN_PROGRESS' && (
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          onClick={() => handleStatusUpdate(task.id, 'REVIEW')}
-                          className="h-7 text-[10px] border-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/10 cursor-pointer"
-                        >
-                          <ChevronRight className="w-3 h-3 mr-1" />
-                          <span>Review</span>
-                        </Button>
-                      )}
-                      {task.status === 'REVIEW' && (
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          onClick={() => handleStatusUpdate(task.id, 'COMPLETED')}
-                          className="h-7 text-[10px] border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          <span>Done</span>
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+
+              {filteredTasks.length === 0 && (
+                <div className="bg-card border border-dashed border-border rounded-2xl p-16 text-center text-muted-foreground space-y-3">
+                  <CheckSquare className="w-10 h-10 text-muted-foreground/30 mx-auto" />
+                  <p className="text-sm font-semibold">No tasks found matching your filters</p>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                    Try adjusting your query or filter tags to find the specified assignments.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card border border-border rounded-2xl p-4 shadow-sm">
+                <div className="text-xs text-muted-foreground font-medium">
+                  Showing <span className="font-semibold text-foreground">{(currentPage - 1) * tasksPerPage + 1}</span> to{' '}
+                  <span className="font-semibold text-foreground">
+                    {Math.min(currentPage * tasksPerPage, totalItems)}
+                  </span>{' '}
+                  of <span className="font-semibold text-foreground">{totalItems}</span> tasks
+                </div>
+                <div className="flex items-center gap-1.5">
                   <Button
-                    size="xs"
-                    onClick={() => handleOpenTaskDetails(task)}
-                    className="h-7 px-2.5 text-[10px] bg-muted hover:bg-muted/80 text-foreground border border-border rounded-xl cursor-pointer flex items-center gap-1"
+                    variant="outline"
+                    size="icon"
+                    className="w-8 h-8 rounded-lg border-border hover:bg-muted cursor-pointer"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>Specs & Chat</span>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1
+                    ) {
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          size="sm"
+                          className={cn(
+                            'w-8 h-8 rounded-lg text-xs font-semibold cursor-pointer',
+                            currentPage === page
+                              ? 'bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white border-0 shadow-md'
+                              : 'border-border hover:bg-muted'
+                          )}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    }
+                    if (
+                      (page === 2 && currentPage > 3) ||
+                      (page === totalPages - 1 && currentPage < totalPages - 2)
+                    ) {
+                      return (
+                        <span key={page} className="px-1 text-xs text-muted-foreground select-none">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="w-8 h-8 rounded-lg border-border hover:bg-muted cursor-pointer"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
-
-        {filteredTasks.length === 0 && (
-          <div className="bg-card border border-dashed border-border rounded-2xl p-16 text-center text-muted-foreground space-y-3">
-            <CheckSquare className="w-10 h-10 text-muted-foreground/30 mx-auto" />
-            <p className="text-sm font-semibold">No tasks found matching your filters</p>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              Try adjusting your query or filter tags to find the specified assignments.
-            </p>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Task Details Modal with Comments Thread */}
       <Modal

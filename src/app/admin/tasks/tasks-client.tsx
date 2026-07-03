@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { taskSchema, TaskInput } from '@/validations/task';
@@ -17,12 +17,15 @@ import {
   Trash2,
   ListFilter,
   MessageSquare,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/modal';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import type { Priority, TaskStatus } from '@prisma/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -78,6 +81,14 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const router = useRouter();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterEmployee, filterDate]);
 
   const handleOpenTaskDetails = (task: TaskWithRelations) => {
     setSelectedTask(task);
@@ -369,104 +380,187 @@ export default function TasksClient({ initialTasks, employees }: TasksClientProp
       </div>
 
       {/* Tasks listing area */}
-      <div className="space-y-4">
-        {filteredTasks.map((task) => (
-          <div 
-            key={task.id}
-            className="bg-card border border-border hover:border-border/80 rounded-2xl p-6 transition-all duration-200 group shadow-md"
-          >
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              
-              {/* Task Details */}
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="text-base font-bold text-foreground group-hover:text-indigo-300 transition-colors">
-                    {task.title}
-                  </h3>
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getPriorityStyles(task.priority)}`}>
-                    {task.priority}
-                  </span>
-                  
-                  {/* Status Dropdown */}
-                  <select
-                    value={task.status}
-                    onChange={(e) => handleQuickStatusChange(task, e.target.value as TaskStatus)}
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold border focus:outline-none bg-card cursor-pointer ${getStatusStyles(task.status)}`}
-                  >
-                    <option value="TODO">TODO</option>
-                    <option value="IN_PROGRESS">IN PROGRESS</option>
-                    <option value="REVIEW">REVIEW</option>
-                    <option value="COMPLETED">COMPLETED</option>
-                    <option value="CANCELLED">CANCELLED</option>
-                  </select>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed max-w-3xl">
-                  {task.description || 'No description provided.'}
-                </p>
-              </div>
+      {(() => {
+        const totalItems = filteredTasks.length;
+        const totalPages = Math.ceil(totalItems / tasksPerPage);
+        const paginatedTasks = filteredTasks.slice(
+          (currentPage - 1) * tasksPerPage,
+          currentPage * tasksPerPage
+        );
 
-              {/* Assignment details */}
-              <div className="flex flex-wrap items-center gap-6 shrink-0 border-t border-border lg:border-t-0 pt-4 lg:pt-0">
-                <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Assigned To</p>
-                    <p className="text-xs font-semibold text-foreground">
-                      {task.assignedTo.firstName} {task.assignedTo.lastName}
-                    </p>
+        return (
+          <div className="space-y-4">
+            <div className="space-y-4">
+              {paginatedTasks.map((task) => (
+                <div 
+                  key={task.id}
+                  className="bg-card border border-border hover:border-border/80 rounded-2xl p-6 transition-all duration-200 group shadow-md"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    
+                    {/* Task Details */}
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h3 className="text-base font-bold text-foreground group-hover:text-indigo-300 transition-colors">
+                          {task.title}
+                        </h3>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getPriorityStyles(task.priority)}`}>
+                          {task.priority}
+                        </span>
+                        
+                        {/* Status Dropdown */}
+                        <select
+                          value={task.status}
+                          onChange={(e) => handleQuickStatusChange(task, e.target.value as TaskStatus)}
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold border focus:outline-none bg-card cursor-pointer ${getStatusStyles(task.status)}`}
+                        >
+                          <option value="TODO">TODO</option>
+                          <option value="IN_PROGRESS">IN PROGRESS</option>
+                          <option value="REVIEW">REVIEW</option>
+                          <option value="COMPLETED">COMPLETED</option>
+                          <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed max-w-3xl">
+                        {task.description || 'No description provided.'}
+                      </p>
+                    </div>
+
+                    {/* Assignment details */}
+                    <div className="flex flex-wrap items-center gap-6 shrink-0 border-t border-border lg:border-t-0 pt-4 lg:pt-0">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Assigned To</p>
+                          <p className="text-xs font-semibold text-foreground">
+                            {task.assignedTo.firstName} {task.assignedTo.lastName}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Due Date</p>
+                        <p className="text-xs font-semibold text-foreground flex items-center">
+                          <Calendar className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                          {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'No due date'}
+                        </p>
+                      </div>
+
+                      {/* Operations */}
+                      <div className="flex items-center space-x-2 pt-2 lg:pt-0">
+                        <button 
+                          onClick={() => handleOpenTaskDetails(task)}
+                          className="p-1.5 bg-background/40 border border-border hover:border-border/80 text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
+                          title="Specs & Chat"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleOpenEdit(task)}
+                          className="p-1.5 bg-background/40 border border-border hover:border-border/80 text-muted-foreground hover:text-white rounded-lg transition-all cursor-pointer"
+                          title="Edit Task"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setDeletingTask(task)}
+                          className="p-1.5 bg-background/40 border border-border hover:border-rose-900/60 text-muted-foreground hover:text-rose-400 rounded-lg transition-all cursor-pointer"
+                          title="Delete Task"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
+              ))}
 
-                <div className="space-y-0.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Due Date</p>
-                  <p className="text-xs font-semibold text-foreground flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
-                    {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'No due date'}
+              {filteredTasks.length === 0 && (
+                <div className="bg-card/50 border border-dashed border-border rounded-2xl p-16 text-center text-muted-foreground space-y-3">
+                  <CheckSquare className="w-10 h-10 text-muted-foreground mx-auto" />
+                  <p className="text-sm font-semibold">No tasks found</p>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                    Create a task and assign it to an employee to begin monitoring system work.
                   </p>
                 </div>
+              )}
+            </div>
 
-                {/* Operations */}
-                <div className="flex items-center space-x-2 pt-2 lg:pt-0">
-                  <button 
-                    onClick={() => handleOpenTaskDetails(task)}
-                    className="p-1.5 bg-background/40 border border-border hover:border-border/80 text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
-                    title="Specs & Chat"
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card border border-border rounded-2xl p-4 shadow-sm">
+                <div className="text-xs text-muted-foreground font-medium">
+                  Showing <span className="font-semibold text-foreground">{(currentPage - 1) * tasksPerPage + 1}</span> to{' '}
+                  <span className="font-semibold text-foreground">
+                    {Math.min(currentPage * tasksPerPage, totalItems)}
+                  </span>{' '}
+                  of <span className="font-semibold text-foreground">{totalItems}</span> tasks
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="w-8 h-8 rounded-lg border-border hover:bg-muted cursor-pointer"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                  </button>
-                  <button 
-                    onClick={() => handleOpenEdit(task)}
-                    className="p-1.5 bg-background/40 border border-border hover:border-border/80 text-muted-foreground hover:text-white rounded-lg transition-all cursor-pointer"
-                    title="Edit Task"
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1
+                    ) {
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          size="sm"
+                          className={cn(
+                            'w-8 h-8 rounded-lg text-xs font-semibold cursor-pointer',
+                            currentPage === page
+                              ? 'bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-650 hover:to-fuchsia-650 text-white border-0 shadow-md'
+                              : 'border-border hover:bg-muted'
+                          )}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    }
+                    if (
+                      (page === 2 && currentPage > 3) ||
+                      (page === totalPages - 1 && currentPage < totalPages - 2)
+                    ) {
+                      return (
+                        <span key={page} className="px-1 text-xs text-muted-foreground select-none">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="w-8 h-8 rounded-lg border-border hover:bg-muted cursor-pointer"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button 
-                    onClick={() => setDeletingTask(task)}
-                    className="p-1.5 bg-background/40 border border-border hover:border-rose-900/60 text-muted-foreground hover:text-rose-400 rounded-lg transition-all cursor-pointer"
-                    title="Delete Task"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-
-            </div>
+            )}
           </div>
-        ))}
-
-        {filteredTasks.length === 0 && (
-          <div className="bg-card/50 border border-dashed border-border rounded-2xl p-16 text-center text-muted-foreground space-y-3">
-            <CheckSquare className="w-10 h-10 text-muted-foreground mx-auto" />
-            <p className="text-sm font-semibold">No tasks found</p>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              Create a task and assign it to an employee to begin monitoring system work.
-            </p>
-          </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Form Modal (Add / Edit) */}
       <Modal
