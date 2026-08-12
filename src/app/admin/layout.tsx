@@ -21,6 +21,7 @@ import {
   Moon,
   Kanban,
   CalendarDays,
+  Receipt,
 } from "lucide-react";
 import { getUnreadCount } from "@/actions/notifications";
 
@@ -87,31 +88,57 @@ export default function AdminLayout({
     return () => clearInterval(interval);
   }, [pathname, session]);
 
-  const navigation = [
-    { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  const menuGroups = [
     {
-      name: "Attendance",
-      href: "/admin/attendance",
-      icon: CalendarDays,
-      subItems: [
-        { name: "Mark Attendance", href: "/admin/attendance/mark" },
-        { name: "Overview", href: "/admin/attendance/overview" },
-        { name: "Daily Attendance", href: "/admin/attendance/daily" },
-        { name: "Corrections", href: "/admin/attendance/correction" },
-        { name: "Leave Requests", href: "/admin/attendance/leave" },
-        { name: "Manual Logs", href: "/admin/attendance/manual" },
-        { name: "Work Shifts", href: "/admin/attendance/shifts" },
-        { name: "Holidays", href: "/admin/attendance/holidays" },
-        { name: "Reports", href: "/admin/attendance/report" },
-      ],
+      title: "Core",
+      items: [
+        { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+      ]
     },
-    { name: "Employees", href: "/admin/employees", icon: Users },
-    { name: "Departments", href: "/admin/departments", icon: Building2 },
-    { name: "Tasks", href: "/admin/tasks", icon: CheckSquare },
-    { name: "Task Board", href: "/admin/task-board", icon: Kanban },
-    { name: "Notifications", href: "/admin/notifications", icon: Bell },
-    { name: "Activity Logs", href: "/admin/activity-logs", icon: History },
-    { name: "Settings", href: "/admin/settings", icon: Settings },
+    {
+      title: "HR & Operations",
+      items: [
+        {
+          name: "Attendance",
+          href: "/admin/attendance",
+          icon: CalendarDays,
+          subItems: [
+            { name: "Mark Attendance", href: "/admin/attendance/mark" },
+            { name: "Overview", href: "/admin/attendance/overview" },
+            { name: "Daily Attendance", href: "/admin/attendance/daily" },
+            { name: "Corrections", href: "/admin/attendance/correction" },
+            { name: "Leave Requests", href: "/admin/attendance/leave" },
+            { name: "Manual Logs", href: "/admin/attendance/manual" },
+            { name: "Work Shifts", href: "/admin/attendance/shifts" },
+            { name: "Holidays", href: "/admin/attendance/holidays" },
+            { name: "Reports", href: "/admin/attendance/report" },
+          ],
+        },
+        { name: "Employees", href: "/admin/employees", icon: Users },
+        { name: "Departments", href: "/admin/departments", icon: Building2 },
+      ]
+    },
+    {
+      title: "Productivity",
+      items: [
+        { name: "Tasks", href: "/admin/tasks", icon: CheckSquare },
+        { name: "Task Board", href: "/admin/task-board", icon: Kanban },
+      ]
+    },
+    {
+      title: "Finance",
+      items: [
+        { name: "Fee Receipts", href: "/admin/receipts", icon: Receipt },
+      ]
+    },
+    {
+      title: "System",
+      items: [
+        { name: "Notifications", href: "/admin/notifications", icon: Bell },
+        { name: "Activity Logs", href: "/admin/activity-logs", icon: History },
+        { name: "Settings", href: "/admin/settings", icon: Settings },
+      ]
+    }
   ];
 
   const handleLogout = async () => {
@@ -163,95 +190,104 @@ export default function AdminLayout({
           </button>
         </div>
 
-        {/* Sidebar Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          {navigation.map((item) => {
-            if (item.subItems) {
-              const isGroupActive = pathname.startsWith(item.href);
-              const isOpen = item.name === "Attendance" ? attendanceOpen : false;
-              const toggleOpen = () => {
-                if (item.name === "Attendance") {
-                  setAttendanceOpen(!attendanceOpen);
-                }
-              };
+        <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto">
+          {menuGroups.map((group, groupIdx) => (
+            <div key={group.title} className="space-y-2">
+              {groupIdx > 0 && <div className="border-t border-border/40 my-3" />}
+              <span className="px-3 text-[9px] font-bold tracking-wider text-muted-foreground/60 uppercase">
+                {group.title}
+              </span>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  if (item.subItems) {
+                    const isGroupActive = pathname.startsWith(item.href);
+                    const isOpen = item.name === "Attendance" ? attendanceOpen : false;
+                    const toggleOpen = () => {
+                      if (item.name === "Attendance") {
+                        setAttendanceOpen(!attendanceOpen);
+                      }
+                    };
 
-              return (
-                <div key={item.name} className="space-y-1">
-                  <button
-                    onClick={toggleOpen}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group border-l-4 cursor-pointer outline-none ${
-                      isGroupActive
-                        ? "bg-gradient-to-r from-indigo-500/10 to-transparent border-indigo-500 text-foreground font-semibold"
-                        : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
+                    return (
+                      <div key={item.name} className="space-y-1">
+                        <button
+                          onClick={toggleOpen}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group border-l-4 cursor-pointer outline-none ${
+                            isGroupActive
+                              ? "bg-gradient-to-r from-indigo-500/10 to-transparent border-indigo-500 text-foreground font-semibold"
+                              : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5">
+                            <item.icon
+                              className={`w-4 h-4 transition-colors ${
+                                isGroupActive
+                                  ? "text-indigo-500 dark:text-indigo-400"
+                                  : "text-muted-foreground group-hover:text-foreground"
+                              }`}
+                            />
+                            <span>{item.name}</span>
+                          </div>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                              isOpen ? "transform rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {isOpen && (
+                          <div className="pl-8 space-y-1 transition-all duration-200">
+                            {item.subItems.map((sub) => {
+                              const isSubActive = pathname === sub.href;
+                              return (
+                                <Link
+                                  key={sub.name}
+                                  href={sub.href}
+                                  className={`flex items-center px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
+                                    isSubActive
+                                      ? "text-indigo-400 font-bold"
+                                      : "text-muted-foreground hover:text-foreground hover:translate-x-0.5"
+                                  }`}
+                                >
+                                  {sub.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  const isActive = pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group border-l-4 ${
+                        isActive
+                          ? "bg-gradient-to-r from-indigo-500/15 via-fuchsia-500/5 to-transparent border-indigo-500 text-foreground font-semibold shadow-inner"
+                          : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-0.5"
+                      }`}
+                    >
                       <item.icon
-                        className={`w-4.5 h-4.5 transition-colors ${
-                          isGroupActive
+                        className={`w-4 h-4 transition-colors ${
+                          isActive
                             ? "text-indigo-500 dark:text-indigo-400"
                             : "text-muted-foreground group-hover:text-foreground"
                         }`}
                       />
-                      <span>{item.name}</span>
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        isOpen ? "transform rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="pl-9 space-y-1 transition-all duration-200">
-                      {item.subItems.map((sub) => {
-                        const isSubActive = pathname === sub.href;
-                        return (
-                          <Link
-                            key={sub.name}
-                            href={sub.href}
-                            className={`flex items-center px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                              isSubActive
-                                ? "text-indigo-400 font-bold"
-                                : "text-muted-foreground hover:text-foreground hover:translate-x-0.5"
-                            }`}
-                          >
-                            {sub.name}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group border-l-4 ${
-                  isActive
-                    ? "bg-gradient-to-r from-indigo-500/15 via-fuchsia-500/5 to-transparent border-indigo-500 text-foreground font-semibold shadow-inner pl-2"
-                    : "border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-1 pl-2 hover:border-indigo-500/30"
-                }`}
-              >
-                <item.icon
-                  className={`w-4.5 h-4.5 transition-colors ${
-                    isActive
-                      ? "text-indigo-500 dark:text-indigo-400"
-                      : "text-muted-foreground group-hover:text-foreground"
-                  }`}
-                />
-                <span className="flex-1">{item.name}</span>
-                {item.name === "Notifications" && unreadCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white animate-pulse shadow-md shadow-rose-500/25">
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                      <span className="flex-1 truncate">{item.name}</span>
+                      {item.name === "Notifications" && unreadCount > 0 && (
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white animate-pulse">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Sidebar User Footer */}

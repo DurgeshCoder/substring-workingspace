@@ -209,3 +209,20 @@ model AttendanceLog {
 
   @@map("attendance_logs")
 }
+
+model Receipt {
+  id          String   @id @default(cuid())
+  receiptNo   String   @unique
+  studentId   String   @default("")
+  studentName String
+  batch       String
+  batchCode   String   @default("")
+  totalAmount Float    @default(0)
+  dueAmount   Float
+  paidAmount  Float
+  paymentDate DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("receipts")
+}
