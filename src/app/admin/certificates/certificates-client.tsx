@@ -402,7 +402,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
             <div>
               <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0b427b; font-family: 'Georgia', serif; letter-spacing: 0.08em; text-transform: uppercase;">Substring Technologies</h3>
               <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 600; color: #8a7355; text-transform: uppercase; letter-spacing: 0.1em; font-family: sans-serif;">Training | Development | Consultancy</p>
-              <p style="margin: 1px 0 0 0; font-size: 8px; color: #95a5a6; font-family: monospace;">contact@substringtechnologies.com | Lucknow, UP</p>
+              <p style="margin: 1px 0 0 0; font-size: 8px; color: #95a5a6; font-family: monospace;">contact@substringtechnologies.com | Lucknow, UP | +91-9839466732</p>
             </div>
           </div>
 
@@ -460,7 +460,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
               <div>
                 <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #7f8c8d; line-height: 1.4; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.02em;">
                   Substring Technologies, 633/D/P256 B R Dubey Enclave<br/>
-                  Dhanwa Deva Road Matiyari Chinhat, Lucknow, UP, INDIA 226028
+                  Dhanwa Deva Road Matiyari Chinhat, Lucknow, UP, INDIA 226028 | Phone: +91-9839466732
                 </p>
               </div>
             </div>
@@ -470,7 +470,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
               <!-- Keep space blank for manual signature -->
               <span style="height: 28px; display: block;"></span>
               <div style="width: 100%; height: 1px; background-color: #cbd5e1; margin-bottom: 6px;"></div>
-              <p style="margin: 0; font-size: 10px; font-weight: 700; color: #0b427b; text-transform: uppercase; letter-spacing: 0.08em; font-family: sans-serif;">Authorized Signature</p>
+              <p style="margin: 0; font-size: 10px; font-weight: 700; color: #0b427b; text-transform: uppercase; letter-spacing: 0.08em; font-family: sans-serif;">Instructor</p>
               <p style="margin: 1px 0 0 0; font-size: 8.5px; color: #8a7355; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">Substring Technologies</p>
             </div>
           </div>
