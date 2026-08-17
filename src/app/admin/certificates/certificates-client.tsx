@@ -356,80 +356,108 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       <div class="certificate-wrapper" style="
         width: 1120px;
         height: 792px;
-        background-color: #ffffff;
-        background-image: repeating-linear-gradient(45deg, #f3f6f9 0px, #f3f6f9 1px, transparent 1px, transparent 15px),
-                          repeating-linear-gradient(-45deg, #f3f6f9 0px, #f3f6f9 1px, transparent 1px, transparent 15px);
+        background-color: #fdfdfd;
+        background-image: radial-gradient(circle, #faf5ef 0%, #ffffff 70%),
+                          repeating-linear-gradient(45deg, #f4ebe1 0px, #f4ebe1 1px, transparent 1px, transparent 20px);
         padding: 40px;
         box-sizing: border-box;
         position: relative;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #0d233a;
-        border: 2px solid #e1e8ed;
+        font-family: 'Georgia', 'Times New Roman', Times, serif;
+        color: #1a2e40;
+        border: 12px solid #0B427B;
         overflow: hidden;
       ">
-        <!-- Inner Border Frame -->
+        <!-- Thin Gold Inset Border -->
         <div style="
           width: 100%;
           height: 100%;
-          border: 1px solid #c8d6e5;
+          border: 2px solid #D4AF37;
           position: relative;
           box-sizing: border-box;
-          padding: 30px;
+          padding: 35px;
         ">
+          <!-- Center Watermark Logo -->
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.035;
+            width: 450px;
+            height: 450px;
+            pointer-events: none;
+            z-index: 0;
+          ">
+            <svg width="100%" height="100%" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M75 10C39.1 10 10 39.1 10 75C10 110.9 39.1 140 75 140C110.9 140 140 110.9 140 75C140 39.1 110.9 10 75 10ZM103.5 61.2C96.2 68.3 84.8 73.1 72.8 73.1H50.5C45.2 73.1 41 68.8 41 63.5C41 58.2 45.2 53.9 50.5 53.9H78.8C86 53.9 92.5 49.3 94.6 42.4C97 34.6 91.2 27 83.1 27H45.5C30.3 27 18 39.3 18 54.5C18 69.7 30.3 82 45.5 82H68.2C80.2 82 91.6 77.2 98.9 70.1C106.2 63 117.6 58.2 129.6 58.2H140C140 68 135 77.2 127 82.5C118 88.5 106.3 90 95.8 90H68.2C56.2 90 44.8 94.8 37.5 101.9C30.2 109 18.8 113.8 6.8 113.8H0C0 103.8 5 94.6 13 89.3C22 83.3 33.7 81.8 44.2 81.8H71.8C83.8 81.8 95.2 77 102.5 69.9C109.8 62.8 121.2 58 133.2 58H140C140 50.2 134.8 43.5 127.8 41.5C120 39.3 111.3 42 107.5 48.5C104.9 53 104.6 57.6 103.5 61.2Z" fill="#0B427B" />
+            </svg>
+          </div>
+
           <!-- Top Left Logo/Branding -->
-          <div style="display: flex; align-items: center; gap: 12px; position: absolute; top: 30px; left: 30px;">
-            <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+          <div style="display: flex; align-items: center; gap: 14px; position: absolute; top: 35px; left: 35px; z-index: 10;">
+            <div style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: white; padding: 4px; border: 1px solid #e2d2c2; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
               <img src="/substring_logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
             </div>
             <div>
-              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0d233a; letter-spacing: 0.05em; text-transform: uppercase;">Substring Technologies</h3>
-              <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 600; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.1em;">Training | Development | Consultancy</p>
-              <p style="margin: 1px 0 0 0; font-size: 8px; color: #95a5a6; font-family: monospace;">contact@substringtechnologies.com, +91-9839466732</p>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0b427b; font-family: 'Georgia', serif; letter-spacing: 0.08em; text-transform: uppercase;">Substring Technologies</h3>
+              <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 600; color: #8a7355; text-transform: uppercase; letter-spacing: 0.1em; font-family: sans-serif;">Training | Development | Consultancy</p>
+              <p style="margin: 1px 0 0 0; font-size: 8px; color: #95a5a6; font-family: monospace;">contact@substringtechnologies.com | Lucknow, UP</p>
             </div>
           </div>
 
-          <!-- Top Right Ribbon Badge -->
-          <div style="position: absolute; top: 20px; right: 30px;">
-            <svg width="65" height="65" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M40 50L25 95L50 82L75 95L60 50" fill="#0B427B" />
-              <path d="M50 50L38 95L50 86L62 95L50 50" fill="#0E65A3" />
-              <circle cx="50" cy="40" r="30" fill="#0B427B" />
-              <circle cx="50" cy="40" r="25" fill="#0E65A3" />
-              <circle cx="50" cy="40" r="22" fill="#0B427B" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3" />
+          <!-- Top Right Emblem Badge (Gold & Blue Seal) -->
+          <div style="position: absolute; top: 25px; right: 35px; z-index: 10; display: flex; flex-direction: column; align-items: center;">
+            <svg width="70" height="70" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.15));">
+              <!-- Ribbons -->
+              <path d="M40 50L28 95L50 84L72 95L60 50" fill="#a07a3c" />
+              <path d="M45 50L35 95L50 86L65 95L55 50" fill="#D4AF37" />
+              <!-- Outer Golden Ring -->
+              <circle cx="50" cy="42" r="32" fill="#D4AF37" />
+              <!-- Inner Blue Ring -->
+              <circle cx="50" cy="42" r="27" fill="#0B427B" />
+              <!-- Dashed Ring -->
+              <circle cx="50" cy="42" r="24" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="3 3" fill="none" />
+              <!-- Gold Star -->
+              <polygon points="50,28 53,37 63,37 55,43 58,52 50,46 42,52 45,43 37,37 47,37" fill="#D4AF37" />
             </svg>
           </div>
 
           <!-- Center Content Area -->
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px;">
-            <h1 style="margin: 0; font-size: 58px; font-weight: 900; letter-spacing: 0.12em; color: #0d233a; font-family: 'Times New Roman', Times, serif; text-transform: uppercase;">Certificate</h1>
-            <h2 style="margin: 5px 0 35px 0; font-size: 16px; font-weight: 700; letter-spacing: 0.25em; color: #0E65A3; text-transform: uppercase;">Of Completion</h2>
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 55px; z-index: 2; position: relative;">
+            <h1 style="margin: 0; font-size: 56px; font-weight: 400; letter-spacing: 0.16em; color: #0b427b; font-family: 'Times New Roman', Times, serif; text-transform: uppercase;">Certificate</h1>
             
-            <p style="margin: 0 0 20px 0; font-size: 14px; font-style: italic; color: #576574;">This is to certify that</p>
+            <div style="display: flex; align-items: center; gap: 15px; margin: 6px 0 28px 0;">
+              <div style="width: 60px; height: 1px; background-color: #D4AF37;"></div>
+              <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.35em; color: #8a7355; text-transform: uppercase; font-family: sans-serif;">Of Completion</h2>
+              <div style="width: 60px; height: 1px; background-color: #D4AF37;"></div>
+            </div>
             
-            <h2 style="margin: 0; font-size: 38px; font-weight: 800; color: #0B427B; font-family: 'Segoe UI', Roboto, sans-serif;">${cert.name}</h2>
-            <div style="width: 580px; height: 1px; background-color: #cbd5e1; margin: 15px auto 10px auto;"></div>
+            <p style="margin: 0 0 16px 0; font-size: 14px; font-style: italic; color: #576574; font-family: 'Georgia', serif;">This is proudly presented to</p>
             
-            <p style="margin: 0 0 25px 0; font-size: 14px; font-weight: 700; color: #475569; letter-spacing: 0.05em;">Reg. ID: ${cert.studentId}</p>
+            <h2 style="margin: 0; font-size: 40px; font-weight: 700; color: #0b427b; letter-spacing: 0.02em; font-family: 'Georgia', serif; text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.05);">${cert.name}</h2>
+            <div style="width: 520px; height: 1.5px; background: linear-gradient(to right, transparent, #D4AF37 20%, #D4AF37 80%, transparent); margin: 12px auto 8px auto;"></div>
             
-            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2c3e50; line-height: 1.6;">
-              has successfully completed the training on <strong style="color: #0d233a; font-weight: 800;">${cert.course}</strong>
+            <p style="margin: 0 0 24px 0; font-size: 13px; font-weight: 700; color: #8a7355; letter-spacing: 0.08em; font-family: sans-serif;">REGISTRATION NO: ${cert.studentId}</p>
+            
+            <p style="margin: 0 0 8px 0; font-size: 16px; color: #2c3e50; line-height: 1.6; max-width: 780px;">
+              for successful completion of specialized training in <strong style="color: #0b427b; font-weight: bold; font-family: 'Georgia', serif;">${cert.course}</strong>
             </p>
-            <p style="margin: 0 0 25px 0; font-size: 15px; color: #2c3e50;">
-              from <strong style="color: #0d233a; font-weight: 700;">${formatCertDate(cert.fromDate)}</strong> to <strong style="color: #0d233a; font-weight: 700;">${formatCertDate(cert.toDate)}</strong>
+            <p style="margin: 0 0 20px 0; font-size: 15px; color: #2c3e50;">
+              conducted from <strong style="color: #0b427b; font-weight: bold;">${formatCertDate(cert.fromDate)}</strong> to <strong style="color: #0b427b; font-weight: bold;">${formatCertDate(cert.toDate)}</strong>
             </p>
             
-            <p style="margin: 0; font-size: 13px; font-style: italic; color: #7f8c8d;">We wish good luck for their future endeavours.</p>
+            <p style="margin: 0; font-size: 12px; font-style: italic; color: #7f8c8d; font-family: 'Georgia', serif;">We recognize their commitment and wish them outstanding success in their career.</p>
           </div>
 
           <!-- Bottom Layout / Signature / Address -->
-          <div style="position: absolute; bottom: 30px; left: 30px; right: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div style="position: absolute; bottom: 35px; left: 35px; right: 35px; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;">
             <!-- Address details -->
             <div style="display: flex; align-items: flex-start; gap: 8px; max-width: 480px; text-align: left;">
-              <svg width="14" height="18" viewBox="0 0 24 24" fill="#E74C3C" xmlns="http://www.w3.org/2000/svg" style="margin-top: 2px;">
+              <svg width="14" height="18" viewBox="0 0 24 24" fill="#8a7355" xmlns="http://www.w3.org/2000/svg" style="margin-top: 2px;">
                 <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" />
               </svg>
               <div>
-                <p style="margin: 0; font-size: 9px; font-weight: 700; color: #7f8c8d; line-height: 1.4; font-family: 'Segoe UI', sans-serif;">
+                <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #7f8c8d; line-height: 1.4; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.02em;">
                   Substring Technologies, 633/D/P256 B R Dubey Enclave<br/>
                   Dhanwa Deva Road Matiyari Chinhat, Lucknow, UP, INDIA 226028
                 </p>
@@ -437,15 +465,43 @@ export default function CertificatesClient({ initialCertificates }: Certificates
             </div>
 
             <!-- Signature block -->
-            <div style="text-align: center; width: 220px;">
-              <div style="width: 100%; height: 1px; background-color: #7f8c8d; margin-bottom: 8px;"></div>
-              <p style="margin: 0; font-size: 11px; font-weight: 700; color: #0d233a; text-transform: uppercase; letter-spacing: 0.05em;">Instructor</p>
-              <p style="margin: 2px 0 0 0; font-size: 9px; color: #7f8c8d;">Substring Technologies</p>
+            <div style="text-align: center; width: 220px; display: flex; flex-direction: column; align-items: center;">
+              <!-- Digital Signature script font style -->
+              <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Cursive', sans-serif; font-size: 26px; color: #0b427b; font-weight: bold; margin-bottom: 2px; transform: rotate(-3deg); height: 28px; display: block; letter-spacing: 0.05em;">
+                Amit Shukla
+              </span>
+              <div style="width: 100%; height: 1px; background-color: #cbd5e1; margin-bottom: 6px;"></div>
+              <p style="margin: 0; font-size: 10px; font-weight: 700; color: #0b427b; text-transform: uppercase; letter-spacing: 0.08em; font-family: sans-serif;">Authorized Signature</p>
+              <p style="margin: 1px 0 0 0; font-size: 8.5px; color: #8a7355; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">Substring Technologies</p>
             </div>
           </div>
         </div>
 
-        <!-- Corner Abstract Shapes -->
+        <!-- Corner Abstract Shapes (Polished Gold and Navy accents) -->
+        <!-- Top Left Subtle Accent -->
+        <div style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 90px;
+          height: 90px;
+          background: linear-gradient(135deg, #0B427B, #D4AF37 3%, transparent 70%);
+          z-index: 1;
+          pointer-events: none;
+        "></div>
+
+        <!-- Top Right Subtle Accent -->
+        <div style="
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 90px;
+          height: 90px;
+          background: linear-gradient(-135deg, #0B427B, #D4AF37 3%, transparent 70%);
+          z-index: 1;
+          pointer-events: none;
+        "></div>
+
         <!-- Bottom Left -->
         <div style="
           position: absolute;
@@ -453,7 +509,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
           left: 0;
           width: 220px;
           height: 160px;
-          background: linear-gradient(135deg, transparent 50%, #0B427B 50%, #0E65A3);
+          background: linear-gradient(135deg, transparent 50%, #0B427B 50%, #8a7355);
           clip-path: polygon(0 100%, 100% 100%, 0 0);
           z-index: 1;
           opacity: 0.95;
@@ -462,12 +518,12 @@ export default function CertificatesClient({ initialCertificates }: Certificates
           position: absolute;
           bottom: 0;
           left: 0;
-          width: 250px;
-          height: 90px;
-          background: linear-gradient(135deg, transparent 40%, #0CA5D6 40%, #0E65A3);
+          width: 240px;
+          height: 85px;
+          background: linear-gradient(135deg, transparent 40%, #D4AF37 40%, #a07a3c);
           clip-path: polygon(0 100%, 100% 100%, 0 0);
           z-index: 0;
-          opacity: 0.45;
+          opacity: 0.75;
         "></div>
 
         <!-- Bottom Right -->
@@ -477,7 +533,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
           right: 0;
           width: 220px;
           height: 160px;
-          background: linear-gradient(-135deg, transparent 50%, #0B427B 50%, #0E65A3);
+          background: linear-gradient(-135deg, transparent 50%, #0B427B 50%, #8a7355);
           clip-path: polygon(100% 100%, 0 100%, 100% 0);
           z-index: 1;
           opacity: 0.95;
@@ -486,12 +542,12 @@ export default function CertificatesClient({ initialCertificates }: Certificates
           position: absolute;
           bottom: 0;
           right: 0;
-          width: 250px;
-          height: 90px;
-          background: linear-gradient(-135deg, transparent 40%, #0CA5D6 40%, #0E65A3);
+          width: 240px;
+          height: 85px;
+          background: linear-gradient(-135deg, transparent 40%, #D4AF37 40%, #a07a3c);
           clip-path: polygon(100% 100%, 0 100%, 100% 0);
           z-index: 0;
-          opacity: 0.45;
+          opacity: 0.75;
         "></div>
       </div>
     `;
