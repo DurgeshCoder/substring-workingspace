@@ -13,12 +13,13 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg bg-card border-border text-foreground max-h-[90vh] overflow-y-auto">
+      <DialogContent className={className || "sm:max-w-lg bg-card border-border text-foreground max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle className="text-base font-bold text-foreground tracking-tight border-b border-border pb-4">
             {title}

@@ -22,6 +22,7 @@ import {
   Kanban,
   CalendarDays,
   Receipt,
+  Award,
 } from "lucide-react";
 import { getUnreadCount } from "@/actions/notifications";
 
@@ -126,9 +127,10 @@ export default function AdminLayout({
       ]
     },
     {
-      title: "Finance",
+      title: "Finance & Academics",
       items: [
         { name: "Fee Receipts", href: "/admin/receipts", icon: Receipt },
+        { name: "Certificates", href: "/admin/certificates", icon: Award },
       ]
     },
     {
