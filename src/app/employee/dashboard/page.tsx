@@ -24,6 +24,24 @@ export default async function EmployeeDashboardPage() {
   const userDisplayName = `${session.user.firstName} ${session.user.lastName}`;
   const designation = session.user.designation || 'Software Engineer';
 
+  // Daily motivational quotes list
+  const quotes = [
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { text: "Quality is not an act, it is a habit.", author: "Aristotle" },
+    { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+    { text: "Productivity is being able to do things that you were never able to do before.", author: "Franz Kafka" },
+    { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+    { text: "The way to get started is to quit talking and begin doing.", author: "Walt Disney" },
+    { text: "Don't count the days, make the days count.", author: "Muhammad Ali" },
+    { text: "Your talent determines what you can do. Your motivation determines how much you are willing to do.", author: "Lou Holtz" }
+  ];
+
+  // Pick quote of the day deterministically
+  const dateIndex = Math.floor(new Date().getTime() / (1000 * 60 * 60 * 24));
+  const dailyQuote = quotes[dateIndex % quotes.length];
+
   // Fetch employee's assigned shift
   const dbUser = await db.user.findUnique({
     where: { id: session.user.id },
@@ -75,7 +93,7 @@ export default async function EmployeeDashboardPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
       {/* Top Welcome Banner */}
-      <div className="bg-gradient-to-r from-fuchsia-900/40 via-indigo-900/10 to-card/50 border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+      <div className="bg-gradient-to-r from-fuchsia-500/10 via-indigo-500/5 to-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl dark:from-fuchsia-900/40 dark:via-indigo-900/10 dark:to-card/50">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-extrabold text-foreground flex items-center gap-2">
             Welcome back, {userDisplayName}! <Sparkles className="w-6 h-6 text-fuchsia-400 animate-pulse" />
@@ -97,6 +115,20 @@ export default async function EmployeeDashboardPage() {
             <AlertCircle className="w-4 h-4" />
             <span>Keep pushing forward!</span>
           </div>
+        </div>
+      </div>
+
+      {/* Daily Motivational Quote Card */}
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-md flex flex-col md:flex-row items-start md:items-center gap-4 hover:border-border/80 transition duration-200">
+        <div className="w-10 h-10 rounded-xl bg-fuchsia-500/10 dark:bg-fuchsia-500/5 flex items-center justify-center text-fuchsia-500 shrink-0">
+          <Sparkles className="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400 animate-pulse" />
+        </div>
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-500 dark:text-fuchsia-400">Quote of the Day</div>
+          <p className="text-sm font-medium text-foreground italic mt-1 leading-relaxed">
+            "{dailyQuote.text}"
+          </p>
+          <span className="text-xs text-muted-foreground block mt-1">— {dailyQuote.author}</span>
         </div>
       </div>
 
