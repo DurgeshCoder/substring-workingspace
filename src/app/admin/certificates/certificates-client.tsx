@@ -559,14 +559,16 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     document.body.appendChild(tempDiv);
 
     // Disable all styles temporarily to avoid html2canvas parsing errors for modern CSS functions like "lab()"
-    const disabledSheets: any[] = [];
-    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
-    styleTags.forEach((tag: any) => {
-      if (tag.sheet) {
-        disabledSheets.push({ tag, original: tag.sheet.disabled });
-        tag.sheet.disabled = true;
+    const disabledSheets: { sheet: CSSStyleSheet; original: boolean }[] = [];
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      try {
+        const sheet = document.styleSheets[i];
+        disabledSheets.push({ sheet, original: sheet.disabled });
+        sheet.disabled = true;
+      } catch (e) {
+        // Ignore cross-origin access issues
       }
-    });
+    }
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -604,8 +606,10 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       return pdf.output('blob');
     } finally {
       // Re-enable stylesheets
-      disabledSheets.forEach(({ tag, original }) => {
-        if (tag.sheet) tag.sheet.disabled = original;
+      disabledSheets.forEach(({ sheet, original }) => {
+        try {
+          sheet.disabled = original;
+        } catch (e) {}
       });
       document.body.removeChild(tempDiv);
     }
@@ -621,14 +625,16 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     document.body.appendChild(tempDiv);
 
     // Disable all styles temporarily to avoid html2canvas parsing errors for modern CSS functions like "lab()"
-    const disabledSheets: any[] = [];
-    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
-    styleTags.forEach((tag: any) => {
-      if (tag.sheet) {
-        disabledSheets.push({ tag, original: tag.sheet.disabled });
-        tag.sheet.disabled = true;
+    const disabledSheets: { sheet: CSSStyleSheet; original: boolean }[] = [];
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      try {
+        const sheet = document.styleSheets[i];
+        disabledSheets.push({ sheet, original: sheet.disabled });
+        sheet.disabled = true;
+      } catch (e) {
+        // Ignore cross-origin access issues
       }
-    });
+    }
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -663,8 +669,10 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       });
     } finally {
       // Re-enable stylesheets
-      disabledSheets.forEach(({ tag, original }) => {
-        if (tag.sheet) tag.sheet.disabled = original;
+      disabledSheets.forEach(({ sheet, original }) => {
+        try {
+          sheet.disabled = original;
+        } catch (e) {}
       });
       document.body.removeChild(tempDiv);
     }
