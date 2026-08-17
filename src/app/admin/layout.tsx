@@ -177,11 +177,11 @@ export default function AdminLayout({
             href="/admin/dashboard"
             className="flex items-center space-x-3 group"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 group-hover:rotate-3 transition duration-200">
-              <Shield className="w-4.5 h-4.5" />
+            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-md shadow-indigo-500/5 group-hover:scale-105 transition duration-200 border border-border">
+              <img src="/substring_logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-indigo-400 transition-colors leading-tight">Workspace</span>
+              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-indigo-400 transition-colors leading-tight">Substring Tech</span>
               <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent font-black tracking-widest text-[8px] uppercase">ADMIN PORTAL</span>
             </div>
           </Link>

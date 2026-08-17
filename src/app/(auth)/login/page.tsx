@@ -100,13 +100,12 @@ function LoginForm() {
 
       {/* Login Card */}
       <div className="w-full max-w-md bg-card/60 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-8 z-10 space-y-6">
-        {/* Brand Logo and Title */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 shadow-lg shadow-indigo-500/25 text-white mb-2">
-            <Shield className="w-6 h-6 animate-pulse" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-2.5 shadow-xl shadow-indigo-500/5 mb-2 border border-border">
+            <img src="/substring_logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-slate-100 to-fuchsia-200">
-            Welcome Back
+            Substring Technologies
           </h1>
           <p className="text-muted-foreground text-sm">
             Sign in to manage your workspace and employees

@@ -122,11 +122,11 @@ export default function EmployeeLayout({
             href="/employee/dashboard"
             className="flex items-center space-x-3 group"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-fuchsia-500 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-fuchsia-500/20 group-hover:scale-105 group-hover:-rotate-3 transition duration-200">
-              <Briefcase className="w-4.5 h-4.5" />
+            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-md shadow-fuchsia-500/5 group-hover:scale-105 transition duration-200 border border-border">
+              <img src="/substring_logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-fuchsia-550 transition-colors leading-tight">Workspace</span>
+              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-fuchsia-550 transition-colors leading-tight">Substring Tech</span>
               <span className="bg-gradient-to-r from-fuchsia-400 to-indigo-400 bg-clip-text text-transparent font-black tracking-widest text-[8px] uppercase">EMPLOYEE</span>
             </div>
           </Link>
