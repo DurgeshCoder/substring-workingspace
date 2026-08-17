@@ -121,6 +121,8 @@ export default function CertificatesClient({ initialCertificates }: Certificates
   const [isZipping, setIsZipping] = useState(false);
   const [zipProgress, setZipProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -348,19 +350,26 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     }
   };
 
-  const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to delete ALL certificates? This action cannot be undone.')) return;
+  const handleClearAll = () => {
+    setIsClearAllModalOpen(true);
+  };
+
+  const handleClearAllConfirm = async () => {
+    setIsClearingAll(true);
     try {
       const res = await clearAllCertificates();
       if (res.success) {
-        toast.success('All certificates deleted.');
+        toast.success('All certificates deleted successfully.');
         setCertificates([]);
         setSelectedIds(new Set());
+        setIsClearAllModalOpen(false);
       } else {
         toast.error(res.error || 'Failed to clear certificates.');
       }
     } catch (err) {
       toast.error('An error occurred.');
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
@@ -1365,6 +1374,47 @@ export default function CertificatesClient({ initialCertificates }: Certificates
               >
                 <Printer className="w-3.5 h-3.5 mr-2" />
                 Print Certificate
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Clear All Confirmation Modal */}
+      {isClearAllModalOpen && (
+        <Modal
+          isOpen={isClearAllModalOpen}
+          onClose={() => setIsClearAllModalOpen(false)}
+          title="Clear All Certificates"
+        >
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-rose-500/10 text-rose-500 rounded-full">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-foreground">Are you absolutely sure?</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  This will delete ALL certificates permanently from the database. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                onClick={() => setIsClearAllModalOpen(false)}
+                variant="outline"
+                className="text-xs font-semibold cursor-pointer rounded-xl"
+                disabled={isClearingAll}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleClearAllConfirm}
+                className="bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold rounded-xl cursor-pointer"
+                disabled={isClearingAll}
+              >
+                {isClearingAll ? 'Clearing...' : 'Clear All'}
               </Button>
             </div>
           </div>

@@ -181,7 +181,7 @@ export default function AdminLayout({
               <img src="/substring_logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-indigo-400 transition-colors leading-tight">Substring Tech</span>
+              <span className="font-extrabold text-sm tracking-tight text-foreground group-hover:text-indigo-400 transition-colors leading-tight">Substring Space</span>
               <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent font-black tracking-widest text-[8px] uppercase">ADMIN PORTAL</span>
             </div>
           </Link>

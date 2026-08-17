@@ -105,7 +105,7 @@ function LoginForm() {
             <img src="/substring_logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-slate-100 to-fuchsia-200">
-            Substring Technologies
+            Substring Space
           </h1>
           <p className="text-muted-foreground text-sm">
             Sign in to manage your workspace and employees
