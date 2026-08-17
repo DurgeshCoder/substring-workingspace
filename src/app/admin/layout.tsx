@@ -46,9 +46,10 @@ export default function AdminLayout({
   }, [pathname]);
 
   useEffect(() => {
-    const isLight =
-      localStorage.getItem("theme") === "light" ||
-      !document.documentElement.classList.contains("dark");
+    const savedTheme = localStorage.getItem("theme");
+    const isLight = savedTheme 
+      ? savedTheme === "light"
+      : !document.documentElement.classList.contains("dark");
     setTheme(isLight ? "light" : "dark");
     if (isLight) {
       document.documentElement.classList.remove("dark");
