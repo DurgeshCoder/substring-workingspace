@@ -29,7 +29,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { createCertificates, deleteCertificate, clearAllCertificates } from '@/actions/certificates';
 import JSZip from 'jszip';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 interface CertificateData {
@@ -550,7 +550,6 @@ export default function CertificatesClient({ initialCertificates }: Certificates
   };
 
   // Convert HTML element to PDF blob
-  // Convert HTML element to PDF blob
   const generatePDFBlob = async (cert: CertificateData): Promise<Blob> => {
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
@@ -575,20 +574,11 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       // Small delay for rendering calculations
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      const imgData = await toPng(element, {
+        pixelRatio: 2,
         backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
-          // Remove all stylesheet link and style elements in the cloned document
-          // so that html2canvas CSS parser doesn't scan or fail on modern properties/colors (lab, oklch)
-          const stylesheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-          stylesheets.forEach(el => el.remove());
-        }
+        cacheBust: true,
       });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       
       const pdf = new jsPDF({
         orientation: 'landscape',
@@ -596,7 +586,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         format: 'a4'
       });
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+      pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
       
       return pdf.output('blob');
     } finally {
@@ -628,28 +618,15 @@ export default function CertificatesClient({ initialCertificates }: Certificates
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      const dataUrl = await toPng(element, {
+        pixelRatio: 2,
         backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
-          // Remove all stylesheet link and style elements in the cloned document
-          // so that html2canvas CSS parser doesn't scan or fail on modern properties/colors (lab, oklch)
-          const stylesheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-          stylesheets.forEach(el => el.remove());
-        }
+        cacheBust: true,
       });
 
-      return new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to convert canvas to PNG blob'));
-          }
-        }, 'image/png');
-      });
+      // Convert data URL to Blob
+      const res = await fetch(dataUrl);
+      return await res.blob();
     } finally {
       document.body.removeChild(tempDiv);
     }
