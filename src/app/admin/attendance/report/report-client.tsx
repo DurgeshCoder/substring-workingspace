@@ -7,6 +7,7 @@ import {
   CheckCircle, 
   Loader2, 
   LayoutList,
+  LayoutGrid,
   Calendar as CalendarIcon,
   Clock,
   UserCheck,
@@ -58,6 +59,7 @@ interface Employee {
   employeeCode: string;
   email: string;
   shiftId: string | null;
+  departmentId: string | null;
 }
 
 interface Department {
@@ -76,15 +78,23 @@ interface ReportClientProps {
   employees: Employee[];
   departments: Department[];
   initialHolidays: Holiday[];
+  isEmployeeView?: boolean;
+  currentEmployeeId?: string;
 }
 
-export default function ReportClient({ employees, departments, initialHolidays }: ReportClientProps) {
+export default function ReportClient({ 
+  employees, 
+  departments, 
+  initialHolidays,
+  isEmployeeView = false,
+  currentEmployeeId = '',
+}: ReportClientProps) {
   const [holidays] = useState<Holiday[]>(initialHolidays);
   const [reportRecords, setReportRecords] = useState<any[]>([]);
-  const [reportViewMode, setReportViewMode] = useState<'table' | 'calendar'>('table');
+  const [reportViewMode, setReportViewMode] = useState<'table' | 'calendar' | 'sheet'>('sheet');
   const [loadingReport, setLoadingReport] = useState(false);
   const [filters, setFilters] = useState({
-    employeeId: '',
+    employeeId: isEmployeeView ? currentEmployeeId : '',
     departmentId: '',
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -98,6 +108,28 @@ export default function ReportClient({ employees, departments, initialHolidays }
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, reportViewMode]);
+
+  // Load report on mount
+  useEffect(() => {
+    const fetchInitialReport = async () => {
+      setLoadingReport(true);
+      try {
+        const res = await getAttendanceReport({
+          employeeId: isEmployeeView ? currentEmployeeId : undefined,
+          month: filters.month,
+          year: filters.year,
+        });
+        if (res.success && res.records) {
+          setReportRecords(res.records);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingReport(false);
+      }
+    };
+    fetchInitialReport();
+  }, []);
 
   // Manual Override Modal states (when clicking Calendar cells or Override buttons)
   const [selectedDayOverride, setSelectedDayOverride] = useState<any>(null);
@@ -408,45 +440,49 @@ export default function ReportClient({ employees, departments, initialHolidays }
           <CardTitle className="text-base font-bold text-foreground">Exportable Attendance Reports</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <form onSubmit={handleFetchReport} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+          <form onSubmit={handleFetchReport} className={cn("grid grid-cols-1 gap-4 items-end", isEmployeeView ? "sm:grid-cols-3" : "sm:grid-cols-5")}>
             
             {/* Select Employee */}
-            <div className="space-y-1.5 flex flex-col">
-              <Label htmlFor="repEmp" className="text-xs font-semibold text-muted-foreground">Employee</Label>
-              <Select
-                value={filters.employeeId}
-                onValueChange={(val) => setFilters({ ...filters, employeeId: val || '' })}
-              >
-                <SelectTrigger id="repEmp" className="w-full bg-background border border-border text-xs rounded-xl">
-                  <SelectValue placeholder="All Employees" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Employees</SelectItem>
-                  {employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!isEmployeeView && (
+              <div className="space-y-1.5 flex flex-col">
+                <Label htmlFor="repEmp" className="text-xs font-semibold text-muted-foreground">Employee</Label>
+                <Select
+                  value={filters.employeeId}
+                  onValueChange={(val) => setFilters({ ...filters, employeeId: val || '' })}
+                >
+                  <SelectTrigger id="repEmp" className="w-full bg-background border border-border text-xs rounded-xl">
+                    <SelectValue placeholder="All Employees" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Employees</SelectItem>
+                    {employees.map(emp => (
+                      <SelectItem key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Select Department */}
-            <div className="space-y-1.5 flex flex-col">
-              <Label htmlFor="repDept" className="text-xs font-semibold text-muted-foreground">Department</Label>
-              <Select
-                value={filters.departmentId}
-                onValueChange={(val) => setFilters({ ...filters, departmentId: val || '' })}
-              >
-                <SelectTrigger id="repDept" className="w-full bg-background border border-border text-xs rounded-xl">
-                  <SelectValue placeholder="All Departments" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Departments</SelectItem>
-                  {departments.map(dept => (
-                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!isEmployeeView && (
+              <div className="space-y-1.5 flex flex-col">
+                <Label htmlFor="repDept" className="text-xs font-semibold text-muted-foreground">Department</Label>
+                <Select
+                  value={filters.departmentId}
+                  onValueChange={(val) => setFilters({ ...filters, departmentId: val || '' })}
+                >
+                  <SelectTrigger id="repDept" className="w-full bg-background border border-border text-xs rounded-xl">
+                    <SelectValue placeholder="All Departments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Departments</SelectItem>
+                    {departments.map(dept => (
+                      <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Select Month */}
             <div className="space-y-1.5 flex flex-col">
@@ -548,8 +584,21 @@ export default function ReportClient({ employees, departments, initialHolidays }
             <CardHeader className="p-0 pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <CardTitle className="text-sm font-bold text-foreground">Query Result ({reportRecords.length} records)</CardTitle>
-                {filters.employeeId && (
                   <div className="flex bg-muted/60 p-1 rounded-xl border border-border/40 w-fit">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setReportViewMode('sheet')}
+                      className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        reportViewMode === 'sheet' 
+                          ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <LayoutGrid className="w-3 h-3 mr-1.5" />
+                      Monthly Sheet
+                    </Button>
                     <Button
                       type="button"
                       size="sm"
@@ -564,22 +613,23 @@ export default function ReportClient({ employees, departments, initialHolidays }
                       <LayoutList className="w-3 h-3 mr-1.5" />
                       Table View
                     </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setReportViewMode('calendar')}
-                      className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                        reportViewMode === 'calendar' 
-                          ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white' 
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <CalendarIcon className="w-3 h-3 mr-1.5" />
-                      Calendar View
-                    </Button>
+                    {filters.employeeId && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setReportViewMode('calendar')}
+                        className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          reportViewMode === 'calendar' 
+                            ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <CalendarIcon className="w-3 h-3 mr-1.5" />
+                        Calendar View
+                      </Button>
+                    )}
                   </div>
-                )}
               </div>
               <Button
                 onClick={handleExportCSV}
@@ -712,6 +762,180 @@ export default function ReportClient({ employees, departments, initialHolidays }
                     </div>
                   </div>
                 </div>
+              ) : reportViewMode === 'sheet' ? (
+                <div className="space-y-4">
+                  <div className="overflow-x-auto border border-border rounded-2xl">
+                    <Table className="text-xs min-w-[1200px] table-fixed">
+                      <TableHeader className="bg-muted">
+                        <TableRow>
+                          <TableHead className="w-48 px-4 py-3 font-bold uppercase text-muted-foreground sticky left-0 bg-muted z-10 border-r border-border/80">Employee</TableHead>
+                          {Array.from({ length: new Date(filters.year, filters.month, 0).getDate() }, (_, i) => i + 1).map(d => {
+                            const dateObj = new Date(filters.year, filters.month - 1, d);
+                            const isSunday = dateObj.getDay() === 0;
+                            return (
+                              <TableHead key={d} className={cn("px-1 py-3 text-center font-bold font-mono border-r border-border/40 w-10", isSunday && "bg-rose-500/5 text-rose-500")}>
+                                {d}
+                              </TableHead>
+                            );
+                          })}
+                          <TableHead className="w-12 px-2 py-3 text-center font-bold text-emerald-500 uppercase border-r border-border/80">P</TableHead>
+                          <TableHead className="w-12 px-2 py-3 text-center font-bold text-yellow-500 uppercase border-r border-border/80">L</TableHead>
+                          <TableHead className="w-12 px-2 py-3 text-center font-bold text-orange-500 uppercase border-r border-border/80">HD</TableHead>
+                          <TableHead className="w-12 px-2 py-3 text-center font-bold text-red-500 uppercase border-r border-border/80">E</TableHead>
+                          <TableHead className="w-12 px-2 py-3 text-center font-bold text-rose-500 uppercase border-r border-border/80">A</TableHead>
+                          <TableHead className="w-20 px-2 py-3 text-center font-bold text-indigo-500 uppercase border-r border-border/80 bg-indigo-500/5">Total Hrs</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(() => {
+                          const daysInMonth = new Date(filters.year, filters.month, 0).getDate();
+                          const filteredEmployees = employees.filter(emp => {
+                            const matchEmp = !filters.employeeId || emp.id === filters.employeeId;
+                            const matchDept = !filters.departmentId || emp.departmentId === filters.departmentId;
+                            return matchEmp && matchDept;
+                          });
+
+                          if (filteredEmployees.length === 0) {
+                            return (
+                              <TableRow>
+                                <TableCell colSpan={daysInMonth + 7} className="text-center py-8 text-muted-foreground">
+                                  No employees found matching filter options.
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+
+                          return filteredEmployees.map(emp => {
+                            let presentCount = 0;
+                            let lateCount = 0;
+                            let halfDayCount = 0;
+                            let leaveCount = 0;
+                            let absentCount = 0;
+                            let totalWorkingMinutes = 0;
+
+                            const cells = Array.from({ length: daysInMonth }, (_, idx) => {
+                              const d = idx + 1;
+                              const dateObj = new Date(filters.year, filters.month - 1, d);
+                              const isSunday = dateObj.getDay() === 0;
+
+                              // Find record
+                              const record = reportRecords.find(r => {
+                                const rDate = new Date(r.date);
+                                // Compare UTC dates to align accurately with DB storage
+                                return r.employee.id === emp.id && rDate.getUTCDate() === d;
+                              });
+
+                              let badgeChar = '-';
+                              let cellClass = "text-muted-foreground/40";
+
+                              if (record) {
+                                totalWorkingMinutes += record.workingMinutes || 0;
+                                if (record.status === 'PRESENT') {
+                                  badgeChar = 'P';
+                                  cellClass = "bg-emerald-500/10 text-emerald-500 font-black border border-emerald-500/20";
+                                  presentCount++;
+                                } else if (record.status === 'LATE') {
+                                  badgeChar = 'L';
+                                  cellClass = "bg-yellow-500/10 text-yellow-500 font-black border border-yellow-500/20";
+                                  presentCount++;
+                                  lateCount++;
+                                } else if (record.status === 'HALF_DAY') {
+                                  badgeChar = 'HD';
+                                  cellClass = "bg-orange-500/10 text-orange-500 font-black border border-orange-500/20";
+                                  halfDayCount++;
+                                } else if (record.status === 'ON_LEAVE' || record.status === 'LEAVE') {
+                                  badgeChar = 'E';
+                                  cellClass = "bg-red-500/10 text-red-500 font-black border border-red-500/20";
+                                  leaveCount++;
+                                } else if (record.status === 'HOLIDAY') {
+                                  badgeChar = 'H';
+                                  cellClass = "bg-violet-500/10 text-violet-500 font-black border border-violet-500/20";
+                                } else if (record.status === 'ABSENT') {
+                                  badgeChar = 'A';
+                                  cellClass = "bg-rose-500/10 text-rose-500 font-black border border-rose-500/20";
+                                  absentCount++;
+                                }
+                              } else {
+                                if (isSunday) {
+                                  badgeChar = 'S';
+                                  cellClass = "bg-rose-500/5 text-rose-400/50 font-bold border border-rose-500/5";
+                                } else {
+                                  // Unmarked weekdays are counted as Absent
+                                  const today = new Date();
+                                  const checkDate = new Date(filters.year, filters.month - 1, d);
+                                  if (checkDate <= today) {
+                                    badgeChar = 'A';
+                                    cellClass = "bg-rose-500/5 text-rose-400/40 border border-rose-500/5";
+                                    absentCount++;
+                                  }
+                                }
+                              }
+
+                              return (
+                                <TableCell key={d} className={cn("p-1 text-center font-mono border-r border-border/40 w-10")}>
+                                  <div className={cn("w-7 h-7 mx-auto rounded-lg flex items-center justify-center text-[9px]", cellClass)}>
+                                    {badgeChar}
+                                  </div>
+                                </TableCell>
+                              );
+                            });
+
+                            const totalHours = Math.floor(totalWorkingMinutes / 60);
+                            const totalMins = totalWorkingMinutes % 60;
+
+                            return (
+                              <TableRow key={emp.id} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="px-4 py-3 sticky left-0 bg-card border-r border-border/80 font-bold text-foreground">
+                                  <div>{emp.firstName} {emp.lastName}</div>
+                                  <div className="text-[9px] text-muted-foreground font-mono font-semibold uppercase mt-0.5">{emp.employeeCode}</div>
+                                </TableCell>
+                                {cells}
+                                <TableCell className="p-1 text-center font-mono font-bold text-emerald-500 border-r border-border/80 bg-emerald-500/5 w-12">{presentCount}</TableCell>
+                                <TableCell className="p-1 text-center font-mono font-bold text-yellow-500 border-r border-border/80 bg-yellow-500/5 w-12">{lateCount}</TableCell>
+                                <TableCell className="p-1 text-center font-mono font-bold text-orange-500 border-r border-border/80 bg-orange-500/5 w-12">{halfDayCount}</TableCell>
+                                <TableCell className="p-1 text-center font-mono font-bold text-red-500 border-r border-border/80 bg-red-500/5 w-12">{leaveCount}</TableCell>
+                                <TableCell className="p-1 text-center font-mono font-bold text-rose-500 border-r border-border/80 bg-rose-500/5 w-12">{absentCount}</TableCell>
+                                <TableCell className="p-1 text-center font-mono font-bold text-indigo-500 border-r border-border/80 bg-indigo-500/5 w-20">{totalHours}h {totalMins}m</TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Grid Legend */}
+                  <div className="pt-4 flex flex-wrap gap-x-5 gap-y-2 justify-center text-[9px] uppercase font-bold text-muted-foreground tracking-wider">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold font-mono">P</span>
+                      <span>Present</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 flex items-center justify-center font-bold font-mono">L</span>
+                      <span>Late</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center font-bold font-mono">HD</span>
+                      <span>Half Day</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center font-bold font-mono">E</span>
+                      <span>Leave (Excused)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center font-bold font-mono">A</span>
+                      <span>Absent</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-500 flex items-center justify-center font-bold font-mono">H</span>
+                      <span>Holiday</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-lg bg-rose-500/5 border border-rose-500/5 text-rose-400/50 flex items-center justify-center font-bold font-mono">S</span>
+                      <span>Sunday</span>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="overflow-x-auto border border-border rounded-2xl">
@@ -724,7 +948,7 @@ export default function ReportClient({ employees, departments, initialHolidays }
                           <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Working Time</TableHead>
                           <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Late / Overtime</TableHead>
                           <TableHead className="px-6 py-4 font-bold uppercase text-muted-foreground">Status</TableHead>
-                          <TableHead className="px-6 py-4 text-right font-bold uppercase text-muted-foreground">Actions</TableHead>
+                          {!isEmployeeView && <TableHead className="px-6 py-4 text-right font-bold uppercase text-muted-foreground">Actions</TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -774,16 +998,18 @@ export default function ReportClient({ employees, departments, initialHolidays }
                                   {r.status}
                                 </span>
                               </TableCell>
-                              <TableCell className="px-6 py-4 text-right">
-                                <Button
-                                  onClick={() => handleOpenTableOverride(r)}
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl cursor-pointer"
-                                >
-                                  Override
-                                </Button>
-                              </TableCell>
+                              {!isEmployeeView && (
+                                <TableCell className="px-6 py-4 text-right">
+                                  <Button
+                                    onClick={() => handleOpenTableOverride(r)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 font-bold rounded-xl cursor-pointer"
+                                  >
+                                    Override
+                                  </Button>
+                                </TableCell>
+                              )}
                             </TableRow>
                           ));
                         })()}

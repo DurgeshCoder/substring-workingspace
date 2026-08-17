@@ -17,7 +17,9 @@ import {
   CalendarDays,
   ShieldCheck,
   UserCheck,
-  CalendarRange
+  CalendarRange,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -48,6 +50,15 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 interface AttendanceRecord {
   id: string;
@@ -202,6 +213,40 @@ export default function AttendanceClient({
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [calendarRecords, setCalendarRecords] = useState<AttendanceRecord[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [calendarViewMode, setCalendarViewMode] = useState<'calendar' | 'sheet'>('calendar');
+  
+  // Calculate stats for current calendar page dynamically
+  const getDynamicMonthlyStats = () => {
+    const present = calendarRecords.filter(r => r.status === 'PRESENT' || r.status === 'LATE').length;
+    const late = calendarRecords.filter(r => r.status === 'LATE').length;
+    const halfDays = calendarRecords.filter(r => r.status === 'HALF_DAY').length;
+    const leaves = calendarRecords.filter(r => r.status === 'ON_LEAVE' || r.status === 'LEAVE').length;
+    const absent = calendarRecords.filter(r => r.status === 'ABSENT').length;
+    
+    // Total working minutes sum
+    const totalMins = calendarRecords.reduce((acc, curr) => acc + (curr.workingMinutes || 0), 0);
+    const totalHours = Math.floor(totalMins / 60);
+    const totalMinsRem = totalMins % 60;
+    
+    // Calculate percentage (of weekdays/marked days, or simple division)
+    const daysInMonth = new Date(year, month, 0).getDate();
+    let weekdays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayOfWeek = new Date(year, month - 1, d).getDay();
+      if (dayOfWeek !== 0) weekdays++; // exclude Sundays
+    }
+    const attendancePercentage = weekdays > 0 ? Math.round((present / weekdays) * 100) : 0;
+
+    return {
+      present,
+      late,
+      halfDays,
+      leaves,
+      absent,
+      totalHours: `${totalHours}h ${totalMinsRem}m`,
+      attendancePercentage: Math.min(attendancePercentage, 100)
+    };
+  };
   
   // Selection states
   const [selectedDayRecord, setSelectedDayRecord] = useState<{
@@ -728,7 +773,7 @@ export default function AttendanceClient({
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monthly Attendance</span>
               <p className="text-3xl font-black text-foreground group-hover:scale-105 transition-transform duration-200 origin-left">
-                {stats ? `${stats.attendancePercentage}%` : '--'}
+                {calendarRecords.length > 0 ? `${getDynamicMonthlyStats().attendancePercentage}%` : '--'}
               </p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
@@ -742,7 +787,7 @@ export default function AttendanceClient({
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Late / Half Days</span>
               <p className="text-3xl font-black text-foreground group-hover:scale-105 transition-transform duration-200 origin-left">
-                {stats ? `${stats.lateCount} / ${stats.halfDays}` : '--'}
+                {calendarRecords.length > 0 ? `${getDynamicMonthlyStats().late} / ${getDynamicMonthlyStats().halfDays}` : '--'}
               </p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-yellow-500 to-amber-500 flex items-center justify-center text-white shadow-lg">
@@ -756,7 +801,7 @@ export default function AttendanceClient({
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Leaves Taken</span>
               <p className="text-3xl font-black text-foreground group-hover:scale-105 transition-transform duration-200 origin-left">
-                {stats ? `${stats.leaveDays} days` : '--'}
+                {calendarRecords.length > 0 ? `${getDynamicMonthlyStats().leaves} days` : '--'}
               </p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-sky-500 flex items-center justify-center text-white shadow-lg">
@@ -770,7 +815,7 @@ export default function AttendanceClient({
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Work Hours</span>
               <p className="text-3xl font-black text-foreground group-hover:scale-105 transition-transform duration-200 origin-left">
-                {stats ? `${stats.totalHours} hrs` : '--'}
+                {calendarRecords.length > 0 ? getDynamicMonthlyStats().totalHours : '--'}
               </p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg">
@@ -780,125 +825,277 @@ export default function AttendanceClient({
         </Card>
       </div>
 
-      {/* 4. Calendar Matrix Grid */}
+      {/* 4. Calendar / Monthly Sheet */}
       <Card className="border border-border rounded-3xl shadow-lg p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-              <CalendarDays className="w-5 h-5" />
+              {calendarViewMode === 'calendar' ? <CalendarDays className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Attendance Calendar</h2>
-              <p className="text-xs text-muted-foreground">Click on any date to view detailed records or raise corrections</p>
+              <h2 className="text-lg font-bold text-foreground">
+                {calendarViewMode === 'calendar' ? 'Attendance Calendar' : 'Monthly Attendance Sheet'}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {calendarViewMode === 'calendar' ? 'Click on any date to view detailed records or raise corrections' : 'Full month grid with work hour totals'}
+              </p>
             </div>
           </div>
 
-          {/* Calendar Month Selector */}
-          <div className="flex items-center bg-background/80 border border-border/80 rounded-xl p-1 shadow-inner self-stretch sm:self-auto">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={prevMonth}
-              className="text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="px-4 font-extrabold text-sm text-foreground text-center flex-1 sm:flex-initial min-w-[100px]">
-              {monthNames[month - 1]} {year}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={nextMonth}
-              className="text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* View Toggle */}
+            <div className="flex bg-muted/60 p-1 rounded-xl border border-border/40">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setCalendarViewMode('calendar')}
+                className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  calendarViewMode === 'calendar'
+                    ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <CalendarDays className="w-3 h-3 mr-1.5" />
+                Calendar
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setCalendarViewMode('sheet')}
+                className={`h-7 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  calendarViewMode === 'sheet'
+                    ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-600 hover:text-white'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <LayoutList className="w-3 h-3 mr-1.5" />
+                Sheet
+              </Button>
+            </div>
+
+            {/* Month Navigator */}
+            <div className="flex items-center bg-background/80 border border-border/80 rounded-xl p-1 shadow-inner self-stretch sm:self-auto">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={prevMonth}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="px-4 font-extrabold text-sm text-foreground text-center flex-1 sm:flex-initial min-w-[100px]">
+                {monthNames[month - 1]} {year}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={nextMonth}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Days Header */}
-        <div className="grid grid-cols-7 gap-2.5 text-center text-xs font-bold text-muted-foreground mb-3 border-b border-border/40 pb-2">
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span className="text-indigo-400/80">Sat</span>
-          <span className="text-indigo-400/80">Sun</span>
-        </div>
+        {calendarViewMode === 'calendar' ? (
+          <>
+            {/* Days Header */}
+            <div className="grid grid-cols-7 gap-2.5 text-center text-xs font-bold text-muted-foreground mb-3 border-b border-border/40 pb-2">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span className="text-indigo-400/80">Sat</span>
+              <span className="text-indigo-400/80">Sun</span>
+            </div>
 
-        {/* Day matrices */}
-        {fetchingCalendar ? (
-          <div className="h-64 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-            <span className="text-sm font-semibold">Loading calendar logs...</span>
-          </div>
+            {/* Day matrices */}
+            {fetchingCalendar ? (
+              <div className="h-64 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                <span className="text-sm font-semibold">Loading calendar logs...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-7 gap-2.5">
+                {calendarDays.map((dayObj, index) => {
+                  if (!dayObj) return <div key={`offset-${index}`} className="aspect-square" />;
+                  
+                  const statusClass = getStatusClasses(dayObj);
+                  const label = getStatusLabel(dayObj);
+                  
+                  return (
+                    <button
+                      key={`day-${dayObj.day}`}
+                      onClick={() => {
+                        setSelectedDayRecord(dayObj);
+                        setDetailModalOpen(true);
+                      }}
+                      className={`aspect-square border rounded-2xl flex flex-col justify-between p-2.5 text-xs font-semibold cursor-pointer transition-all duration-200 outline-none select-none relative ${statusClass}`}
+                    >
+                      <span className="text-xs font-bold">{dayObj.day}</span>
+                      <span className="text-[10px] font-extrabold uppercase mt-auto tracking-wider bg-background/30 px-1.5 py-0.5 rounded-md backdrop-blur-[2px]">
+                        {label}
+                      </span>
+                      {dayObj.holiday && (
+                        <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-neutral-400" title={dayObj.holiday.title} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Legend */}
+            <div className="mt-8 pt-6 border-t border-border/40 flex flex-wrap gap-x-6 gap-y-3 justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-emerald-500/10 border border-emerald-500/30" />
+                <span>Present</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-rose-500/10 border border-rose-500/30" />
+                <span>Absent</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-red-500/10 border border-red-500/30" />
+                <span>Leave</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-amber-500/10 border border-amber-500/30" />
+                <span>Late</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-orange-500/10 border border-orange-500/30" />
+                <span>Half Day</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-violet-500/10 border border-violet-500/30" />
+                <span>Holiday</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-slate-500/5 border border-slate-500/20" />
+                <span>Weekend</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded bg-gray-500/10 border border-dashed border-gray-500/30" />
+                <span>Not Marked</span>
+              </div>
+            </div>
+          </>
         ) : (
-          <div className="grid grid-cols-7 gap-2.5">
-            {calendarDays.map((dayObj, index) => {
-              if (!dayObj) return <div key={`offset-${index}`} className="aspect-square" />;
-              
-              const statusClass = getStatusClasses(dayObj);
-              const label = getStatusLabel(dayObj);
-              
-              return (
-                <button
-                  key={`day-${dayObj.day}`}
-                  onClick={() => {
-                    setSelectedDayRecord(dayObj);
-                    setDetailModalOpen(true);
-                  }}
-                  className={`aspect-square border rounded-2xl flex flex-col justify-between p-2.5 text-xs font-semibold cursor-pointer transition-all duration-200 outline-none select-none relative ${statusClass}`}
-                >
-                  <span className="text-xs font-bold">{dayObj.day}</span>
-                  <span className="text-[10px] font-extrabold uppercase mt-auto tracking-wider bg-background/30 px-1.5 py-0.5 rounded-md backdrop-blur-[2px]">
-                    {label}
-                  </span>
-                  {dayObj.holiday && (
-                    <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-neutral-400" title={dayObj.holiday.title} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
+          /* Monthly Sheet View */
+          fetchingCalendar ? (
+            <div className="h-64 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+              <span className="text-sm font-semibold">Loading attendance data...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-border/60">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground w-12">#</TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Day</TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Check In</TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Check Out</TableHead>
+                    <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-right">Work Hours</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(() => {
+                    const daysInMonth = new Date(year, month, 0).getDate();
+                    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const rows = [];
+                    let totalMins = 0;
 
-        {/* Legend */}
-        <div className="mt-8 pt-6 border-t border-border/40 flex flex-wrap gap-x-6 gap-y-3 justify-center text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-emerald-500/10 border border-emerald-500/30" />
-            <span>Present</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-rose-500/10 border border-rose-500/30" />
-            <span>Absent</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-red-500/10 border border-red-500/30" />
-            <span>Leave</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-amber-500/10 border border-amber-500/30" />
-            <span>Late</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-orange-500/10 border border-orange-500/30" />
-            <span>Half Day</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-violet-500/10 border border-violet-500/30" />
-            <span>Holiday</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-slate-500/5 border border-slate-500/20" />
-            <span>Weekend</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-gray-500/10 border border-dashed border-gray-500/30" />
-            <span>Not Marked</span>
-          </div>
-        </div>
+                    for (let d = 1; d <= daysInMonth; d++) {
+                      const dateObj = new Date(year, month - 1, d);
+                      const isSunday = dateObj.getDay() === 0;
+                      const holiday = holidays.find(h => {
+                        const hd = new Date(h.date);
+                        return hd.getUTCDate() === d && hd.getUTCMonth() === month - 1 && hd.getUTCFullYear() === year;
+                      });
+                      const record = calendarRecords.find(r => {
+                        const rd = new Date(r.date);
+                        return rd.getUTCDate() === d && rd.getUTCMonth() === month - 1 && rd.getUTCFullYear() === year;
+                      });
+
+                      if (record) totalMins += record.workingMinutes || 0;
+
+                      const statusBadge = (() => {
+                        if (isSunday) return { label: 'Sunday', cls: 'bg-slate-500/10 text-slate-400' };
+                        if (holiday) return { label: 'Holiday', cls: 'bg-violet-500/10 text-violet-400' };
+                        if (!record) return { label: '—', cls: 'bg-muted text-muted-foreground' };
+                        const s = record.status;
+                        if (s === 'PRESENT') return { label: 'Present', cls: 'bg-emerald-500/10 text-emerald-400' };
+                        if (s === 'ABSENT') return { label: 'Absent', cls: 'bg-rose-500/10 text-rose-400' };
+                        if (s === 'LATE') return { label: 'Late', cls: 'bg-amber-500/10 text-amber-400' };
+                        if (s === 'HALF_DAY') return { label: 'Half Day', cls: 'bg-orange-500/10 text-orange-400' };
+                        if (s === 'ON_LEAVE' || s === 'LEAVE') return { label: 'On Leave', cls: 'bg-red-500/10 text-red-400' };
+                        return { label: s, cls: 'bg-muted text-muted-foreground' };
+                      })();
+
+                      const fmtTime = (t: Date | string | null) => {
+                        if (!t) return '—';
+                        return new Date(t).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+                      };
+                      const fmtHrs = (mins: number) => {
+                        if (!mins) return '—';
+                        return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+                      };
+
+                      rows.push(
+                        <TableRow
+                          key={d}
+                          className={cn(
+                            'transition-colors text-sm',
+                            isSunday && 'opacity-50',
+                            holiday && !isSunday && 'bg-violet-500/5'
+                          )}
+                        >
+                          <TableCell className="text-muted-foreground font-medium text-xs">{d}</TableCell>
+                          <TableCell className="font-semibold text-foreground">
+                            {dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs font-bold">{dayNames[dateObj.getDay()]}</TableCell>
+                          <TableCell>
+                            <span className={`inline-flex px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${statusBadge.cls}`}>
+                              {statusBadge.label}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs">{record ? fmtTime(record.checkIn) : '—'}</TableCell>
+                          <TableCell className="text-muted-foreground text-xs">{record ? fmtTime(record.checkOut) : '—'}</TableCell>
+                          <TableCell className="text-right font-bold text-foreground text-xs">{record ? fmtHrs(record.workingMinutes) : '—'}</TableCell>
+                        </TableRow>
+                      );
+                    }
+
+                    const th = Math.floor(totalMins / 60);
+                    const tm = totalMins % 60;
+
+                    rows.push(
+                      <TableRow key="total" className="bg-indigo-500/5 border-t-2 border-indigo-500/20">
+                        <TableCell colSpan={6} className="text-xs font-extrabold uppercase tracking-widest text-indigo-400">
+                          Total Work Hours — {monthNames[month - 1]} {year}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-black text-indigo-400">
+                          {totalMins > 0 ? `${th}h ${tm}m` : '—'}
+                        </TableCell>
+                      </TableRow>
+                    );
+
+                    return rows;
+                  })()}
+                </TableBody>
+              </Table>
+            </div>
+          )
+        )}
       </Card>
 
       {/* 5. POPUP DIALOG - DAY SPECIFIC DETAILS */}
