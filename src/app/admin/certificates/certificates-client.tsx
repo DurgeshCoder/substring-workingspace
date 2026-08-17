@@ -356,198 +356,158 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       <div class="certificate-wrapper" style="
         width: 1120px;
         height: 792px;
-        background-color: #fdfdfd;
-        background-image: radial-gradient(circle, #faf5ef 0%, #ffffff 70%),
-                          repeating-linear-gradient(45deg, #f4ebe1 0px, #f4ebe1 1px, transparent 1px, transparent 20px);
-        padding: 40px;
+        background-color: #fcfbf9;
+        background-image: radial-gradient(circle at center, #ffffff 0%, #faf8f5 100%);
+        padding: 30px;
         box-sizing: border-box;
         position: relative;
         font-family: 'Georgia', 'Times New Roman', Times, serif;
-        color: #1a2e40;
-        border: 12px solid #0B427B;
+        color: #1b2a4a;
+        border: 16px solid #0f2942;
+        box-shadow: inset 0 0 40px rgba(138, 115, 85, 0.15);
         overflow: hidden;
       ">
-        <!-- Thin Gold Inset Border -->
+        <!-- Inner Border Frame (Thick Navy + Thin Gold Inset) -->
         <div style="
           width: 100%;
           height: 100%;
-          border: 2px solid #D4AF37;
+          border: 2px solid #d4af37;
           position: relative;
           box-sizing: border-box;
-          padding: 35px;
+          padding: 40px;
         ">
+          <!-- Second Gold Hairline Inset -->
+          <div style="
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            pointer-events: none;
+          "></div>
+
           <!-- Center Watermark Logo -->
           <div style="
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            opacity: 0.045;
-            width: 320px;
-            height: 320px;
+            opacity: 0.038;
+            width: 340px;
+            height: 340px;
             pointer-events: none;
             z-index: 0;
             display: flex;
             align-items: center;
             justify-content: center;
           ">
-            <img src="/substring_logo.png" alt="Watermark" style="width: 100%; height: 100%; object-fit: contain; filter: contrast(1.1) brightness(0.9);" />
+            <img src="/substring_logo.png" alt="Watermark" style="width: 100%; height: 100%; object-fit: contain;" />
           </div>
 
           <!-- Top Left Logo/Branding -->
-          <div style="display: flex; align-items: center; gap: 14px; position: absolute; top: 35px; left: 35px; z-index: 10;">
-            <div style="width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: white; padding: 4px; border: 1px solid #e2d2c2; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+          <div style="display: flex; align-items: center; gap: 14px; position: absolute; top: 40px; left: 40px; z-index: 10;">
+            <div style="width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: white; padding: 5px; border: 1.5px solid #d4af37; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
               <img src="/substring_logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
             </div>
             <div>
-              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0b427b; font-family: 'Georgia', serif; letter-spacing: 0.08em; text-transform: uppercase;">Substring Technologies</h3>
-              <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 600; color: #8a7355; text-transform: uppercase; letter-spacing: 0.1em; font-family: sans-serif;">Training | Development | Consultancy</p>
-              <p style="margin: 1px 0 0 0; font-size: 8px; color: #95a5a6; font-family: monospace;">contact@substringtechnologies.com | Lucknow, UP | +91-9839466732</p>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f2942; font-family: 'Georgia', serif; letter-spacing: 0.06em; text-transform: uppercase;">Substring Technologies</h3>
+              <p style="margin: 3px 0 0 0; font-size: 9px; font-weight: 600; color: #b89756; text-transform: uppercase; letter-spacing: 0.12em; font-family: 'Segoe UI', sans-serif;">Training | Development | Consultancy</p>
+              <p style="margin: 2px 0 0 0; font-size: 8px; color: #7f8c8d; font-family: monospace;">contact@substringtechnologies.com | Lucknow, UP | +91-9839466732</p>
             </div>
           </div>
 
-          <!-- Top Right Emblem Badge (Gold & Blue Seal) -->
-          <div style="position: absolute; top: 25px; right: 35px; z-index: 10; display: flex; flex-direction: column; align-items: center;">
-            <svg width="70" height="70" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.15));">
-              <!-- Ribbons -->
-              <path d="M40 50L28 95L50 84L72 95L60 50" fill="#a07a3c" />
-              <path d="M45 50L35 95L50 86L65 95L55 50" fill="#D4AF37" />
-              <!-- Outer Golden Ring -->
-              <circle cx="50" cy="42" r="32" fill="#D4AF37" />
-              <!-- Inner Blue Ring -->
-              <circle cx="50" cy="42" r="27" fill="#0B427B" />
-              <!-- Dashed Ring -->
-              <circle cx="50" cy="42" r="24" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="3 3" fill="none" />
-              <!-- Gold Star -->
-              <polygon points="50,28 53,37 63,37 55,43 58,52 50,46 42,52 45,43 37,37 47,37" fill="#D4AF37" />
+          <!-- Top Right Authenticity Shield (Gold & Navy Emblem) -->
+          <div style="position: absolute; top: 30px; right: 40px; z-index: 10; display: flex; flex-direction: column; align-items: center;">
+            <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.12));">
+              <!-- Draped ribbons -->
+              <path d="M38 52L22 98L50 86L78 98L62 52" fill="#c29d53" />
+              <path d="M44 52L30 98L50 88L70 98L56 52" fill="#d4af37" />
+              <!-- Outer Golden Cog-seal -->
+              <circle cx="50" cy="40" r="34" fill="#d4af37" />
+              <!-- Outer Navy Layer -->
+              <circle cx="50" cy="40" r="30" fill="#0f2942" />
+              <!-- Gold Dashed Inlay -->
+              <circle cx="50" cy="40" r="26" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="3 3" fill="none" />
+              <!-- Certified Typography inside seal -->
+              <text x="50" y="38" fill="#d4af37" font-size="7" font-family="'Segoe UI', sans-serif" font-weight="bold" text-anchor="middle" letter-spacing="0.1em">VERIFIED</text>
+              <polygon points="50,44 52,50 58,50 53,54 55,60 50,56 45,60 47,54 42,50 48,50" fill="#d4af37" />
             </svg>
           </div>
 
           <!-- Center Content Area -->
           <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 55px; z-index: 2; position: relative;">
-            <h1 style="margin: 0; font-size: 56px; font-weight: 400; letter-spacing: 0.16em; color: #0b427b; font-family: 'Times New Roman', Times, serif; text-transform: uppercase;">Certificate</h1>
+            <h1 style="margin: 0; font-size: 58px; font-weight: 400; letter-spacing: 0.18em; color: #0f2942; font-family: 'Times New Roman', Times, serif; text-transform: uppercase; text-shadow: 1px 1px 1px rgba(0,0,0,0.05);">Certificate</h1>
             
-            <div style="display: flex; align-items: center; gap: 15px; margin: 6px 0 28px 0;">
-              <div style="width: 60px; height: 1px; background-color: #D4AF37;"></div>
-              <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.35em; color: #8a7355; text-transform: uppercase; font-family: sans-serif;">Of Completion</h2>
-              <div style="width: 60px; height: 1px; background-color: #D4AF37;"></div>
+            <div style="display: flex; align-items: center; gap: 20px; margin: 8px 0 30px 0;">
+              <div style="width: 80px; height: 1px; background: linear-gradient(to left, #d4af37, transparent);"></div>
+              <h2 style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.38em; color: #b89756; text-transform: uppercase; font-family: 'Segoe UI', sans-serif;">Of Completion</h2>
+              <div style="width: 80px; height: 1px; background: linear-gradient(to right, #d4af37, transparent);"></div>
             </div>
             
-            <p style="margin: 0 0 16px 0; font-size: 14px; font-style: italic; color: #576574; font-family: 'Georgia', serif;">This is proudly presented to</p>
+            <p style="margin: 0 0 16px 0; font-size: 14px; font-style: italic; color: #64748b; font-family: 'Georgia', serif;">This certificate is officially presented to</p>
             
-            <h2 style="margin: 0; font-size: 40px; font-weight: 700; color: #0b427b; letter-spacing: 0.02em; font-family: 'Georgia', serif; text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.05);">${cert.name}</h2>
-            <div style="width: 520px; height: 1.5px; background: linear-gradient(to right, transparent, #D4AF37 20%, #D4AF37 80%, transparent); margin: 12px auto 8px auto;"></div>
+            <h2 style="margin: 0; font-size: 42px; font-weight: 700; color: #0f2942; letter-spacing: 0.03em; font-family: 'Georgia', serif;">${cert.name}</h2>
+            <div style="width: 580px; height: 1.5px; background: linear-gradient(to right, transparent, #d4af37 15%, #d4af37 85%, transparent); margin: 14px auto 10px auto;"></div>
             
-            <p style="margin: 0 0 24px 0; font-size: 13px; font-weight: 700; color: #8a7355; letter-spacing: 0.08em; font-family: sans-serif;">REGISTRATION NO: ${cert.studentId}</p>
+            <p style="margin: 0 0 26px 0; font-size: 12.5px; font-weight: 700; color: #b89756; letter-spacing: 0.1em; font-family: 'Segoe UI', sans-serif; text-transform: uppercase;">REGISTRATION NO: ${cert.studentId}</p>
             
-            <p style="margin: 0 0 8px 0; font-size: 16px; color: #2c3e50; line-height: 1.6; max-width: 780px;">
-              for successful completion of specialized training in <strong style="color: #0b427b; font-weight: bold; font-family: 'Georgia', serif;">${cert.course}</strong>
+            <p style="margin: 0 0 8px 0; font-size: 16.5px; color: #334155; line-height: 1.6; max-width: 820px; font-family: 'Georgia', serif;">
+              for successfully completing the advanced training program in <strong style="color: #0f2942; font-weight: bold;">${cert.course}</strong>
             </p>
-            <p style="margin: 0 0 20px 0; font-size: 15px; color: #2c3e50;">
-              conducted from <strong style="color: #0b427b; font-weight: bold;">${formatCertDate(cert.fromDate)}</strong> to <strong style="color: #0b427b; font-weight: bold;">${formatCertDate(cert.toDate)}</strong>
+            <p style="margin: 0 0 22px 0; font-size: 15px; color: #334155; font-family: 'Georgia', serif;">
+              conducted from <strong style="color: #0f2942; font-weight: bold;">${formatCertDate(cert.fromDate)}</strong> to <strong style="color: #0f2942; font-weight: bold;">${formatCertDate(cert.toDate)}</strong>
             </p>
             
-            <p style="margin: 0; font-size: 12px; font-style: italic; color: #7f8c8d; font-family: 'Georgia', serif;">We recognize their commitment and wish them outstanding success in their career.</p>
+            <p style="margin: 0; font-size: 12.5px; font-style: italic; color: #64748b; font-family: 'Georgia', serif;">In recognition of outstanding performance, commitment, and skill acquisition.</p>
           </div>
 
-          <!-- Bottom Layout / Signature / Address -->
-          <div style="position: absolute; bottom: 35px; left: 35px; right: 35px; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;">
+          <!-- Bottom Layout / Signature / Address / Verification -->
+          <div style="position: absolute; bottom: 35px; left: 40px; right: 40px; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;">
             <!-- Address details -->
-            <div style="display: flex; align-items: flex-start; gap: 8px; max-width: 480px; text-align: left;">
-              <svg width="14" height="18" viewBox="0 0 24 24" fill="#8a7355" xmlns="http://www.w3.org/2000/svg" style="margin-top: 2px;">
+            <div style="display: flex; align-items: flex-start; gap: 8px; max-width: 440px; text-align: left;">
+              <svg width="14" height="18" viewBox="0 0 24 24" fill="#b89756" xmlns="http://www.w3.org/2000/svg" style="margin-top: 2px;">
                 <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" />
               </svg>
               <div>
-                <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #7f8c8d; line-height: 1.4; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.02em;">
+                <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #64748b; line-height: 1.45; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; letter-spacing: 0.03em;">
                   Substring Technologies, 633/D/P256 B R Dubey Enclave<br/>
                   Dhanwa Deva Road Matiyari Chinhat, Lucknow, UP, INDIA 226028 | Phone: +91-9839466732
                 </p>
               </div>
             </div>
 
+            <!-- Modern Security Verification Element -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 2px; opacity: 0.85;">
+              <!-- Mini Mock QR Code -->
+              <div style="width: 42px; height: 42px; border: 1.5px solid #d4af37; padding: 2px; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <svg width="100%" height="100%" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0h7v7H0V0zm1 1v5h5V1H1zm11 11h1v1h-1v-1zm0-1h1v1h-1v-1zm-1 0h1v1h-1v-1zm0 2h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1H9v-1zm1 1h1v1h-1v-1zm-2 0h1v1H8v-1zm4-1h1v1h-1v-1zm-1-1h1v1h-1v-1zm2 2h1v1h-1v-1zm0-4h1v1h-1v-1zm-1 0h1v1h-1v-1zm2-1h1v1h-1v-1zm-1-1h1v1H16v-1zm1-1h1v1h-1v-1zm-2 1h1v1h-1v-1zm-1-2h1v1h-1V3zm2 1h1v1h-1V4zm-1 1h1v1h-1V5zm4-5h7v7h-7V0zm1 1v5h5V1h-5zM0 18h7v7H0v-7zm1 1v5h5v-5H1zm17-7h7v7h-7v-7zm1 1v5h5v-5h-5z" fill="#0f2942"/>
+                </svg>
+              </div>
+              <span style="font-family: 'Segoe UI', sans-serif; font-size: 7.5px; font-weight: 700; color: #b89756; letter-spacing: 0.05em; text-transform: uppercase;">Scan to verify</span>
+            </div>
+
             <!-- Signature block -->
             <div style="text-align: center; width: 220px; display: flex; flex-direction: column; align-items: center;">
               <!-- Keep space blank for manual signature -->
-              <span style="height: 28px; display: block;"></span>
+              <span style="height: 32px; display: block;"></span>
               <div style="width: 100%; height: 1px; background-color: #cbd5e1; margin-bottom: 6px;"></div>
-              <p style="margin: 0; font-size: 10px; font-weight: 700; color: #0b427b; text-transform: uppercase; letter-spacing: 0.08em; font-family: sans-serif;">Instructor</p>
-              <p style="margin: 1px 0 0 0; font-size: 8.5px; color: #8a7355; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">Substring Technologies</p>
+              <p style="margin: 0; font-size: 10px; font-weight: 700; color: #0f2942; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Segoe UI', sans-serif;">Instructor</p>
+              <p style="margin: 2px 0 0 0; font-size: 8.5px; color: #b89756; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">Substring Technologies</p>
             </div>
           </div>
         </div>
 
-        <!-- Corner Abstract Shapes (Polished Gold and Navy accents) -->
-        <!-- Top Left Subtle Accent -->
-        <div style="
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 90px;
-          height: 90px;
-          background: linear-gradient(135deg, #0B427B, #D4AF37 3%, transparent 70%);
-          z-index: 1;
-          pointer-events: none;
-        "></div>
-
-        <!-- Top Right Subtle Accent -->
-        <div style="
-          position: absolute;
-          top: 0;
-          right: 0;
-          width: 90px;
-          height: 90px;
-          background: linear-gradient(-135deg, #0B427B, #D4AF37 3%, transparent 70%);
-          z-index: 1;
-          pointer-events: none;
-        "></div>
-
-        <!-- Bottom Left -->
-        <div style="
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 220px;
-          height: 160px;
-          background: linear-gradient(135deg, transparent 50%, #0B427B 50%, #8a7355);
-          clip-path: polygon(0 100%, 100% 100%, 0 0);
-          z-index: 1;
-          opacity: 0.95;
-        "></div>
-        <div style="
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 240px;
-          height: 85px;
-          background: linear-gradient(135deg, transparent 40%, #D4AF37 40%, #a07a3c);
-          clip-path: polygon(0 100%, 100% 100%, 0 0);
-          z-index: 0;
-          opacity: 0.75;
-        "></div>
-
-        <!-- Bottom Right -->
-        <div style="
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 220px;
-          height: 160px;
-          background: linear-gradient(-135deg, transparent 50%, #0B427B 50%, #8a7355);
-          clip-path: polygon(100% 100%, 0 100%, 100% 0);
-          z-index: 1;
-          opacity: 0.95;
-        "></div>
-        <div style="
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 240px;
-          height: 85px;
-          background: linear-gradient(-135deg, transparent 40%, #D4AF37 40%, #a07a3c);
-          clip-path: polygon(100% 100%, 0 100%, 100% 0);
-          z-index: 0;
-          opacity: 0.75;
-        "></div>
+        <!-- Classic Symmetrical Corner Guards (Navy & Gold Ribbed) -->
+        <!-- Top Left Corner -->
+        <div style="position: absolute; top: 0; left: 0; width: 45px; height: 45px; border-top: 4px solid #d4af37; border-left: 4px solid #d4af37; pointer-events: none; z-index: 5;"></div>
+        <!-- Top Right Corner -->
+        <div style="position: absolute; top: 0; right: 0; width: 45px; height: 45px; border-top: 4px solid #d4af37; border-right: 4px solid #d4af37; pointer-events: none; z-index: 5;"></div>
+        <!-- Bottom Left Corner -->
+        <div style="position: absolute; bottom: 0; left: 0; width: 45px; height: 45px; border-bottom: 4px solid #d4af37; border-left: 4px solid #d4af37; pointer-events: none; z-index: 5;"></div>
+        <!-- Bottom Right Corner -->
+        <div style="position: absolute; bottom: 0; right: 0; width: 45px; height: 45px; border-bottom: 4px solid #d4af37; border-right: 4px solid #d4af37; pointer-events: none; z-index: 5;"></div>
       </div>
     `;
   };
