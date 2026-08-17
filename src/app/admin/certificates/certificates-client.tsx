@@ -382,15 +382,16 @@ export default function CertificatesClient({ initialCertificates }: Certificates
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            opacity: 0.035;
-            width: 450px;
-            height: 450px;
+            opacity: 0.045;
+            width: 320px;
+            height: 320px;
             pointer-events: none;
             z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           ">
-            <svg width="100%" height="100%" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M75 10C39.1 10 10 39.1 10 75C10 110.9 39.1 140 75 140C110.9 140 140 110.9 140 75C140 39.1 110.9 10 75 10ZM103.5 61.2C96.2 68.3 84.8 73.1 72.8 73.1H50.5C45.2 73.1 41 68.8 41 63.5C41 58.2 45.2 53.9 50.5 53.9H78.8C86 53.9 92.5 49.3 94.6 42.4C97 34.6 91.2 27 83.1 27H45.5C30.3 27 18 39.3 18 54.5C18 69.7 30.3 82 45.5 82H68.2C80.2 82 91.6 77.2 98.9 70.1C106.2 63 117.6 58.2 129.6 58.2H140C140 68 135 77.2 127 82.5C118 88.5 106.3 90 95.8 90H68.2C56.2 90 44.8 94.8 37.5 101.9C30.2 109 18.8 113.8 6.8 113.8H0C0 103.8 5 94.6 13 89.3C22 83.3 33.7 81.8 44.2 81.8H71.8C83.8 81.8 95.2 77 102.5 69.9C109.8 62.8 121.2 58 133.2 58H140C140 50.2 134.8 43.5 127.8 41.5C120 39.3 111.3 42 107.5 48.5C104.9 53 104.6 57.6 103.5 61.2Z" fill="#0B427B" />
-            </svg>
+            <img src="/substring_logo.png" alt="Watermark" style="width: 100%; height: 100%; object-fit: contain; filter: contrast(1.1) brightness(0.9);" />
           </div>
 
           <!-- Top Left Logo/Branding -->
@@ -466,10 +467,8 @@ export default function CertificatesClient({ initialCertificates }: Certificates
 
             <!-- Signature block -->
             <div style="text-align: center; width: 220px; display: flex; flex-direction: column; align-items: center;">
-              <!-- Digital Signature script font style -->
-              <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Cursive', sans-serif; font-size: 26px; color: #0b427b; font-weight: bold; margin-bottom: 2px; transform: rotate(-3deg); height: 28px; display: block; letter-spacing: 0.05em;">
-                Amit Shukla
-              </span>
+              <!-- Keep space blank for manual signature -->
+              <span style="height: 28px; display: block;"></span>
               <div style="width: 100%; height: 1px; background-color: #cbd5e1; margin-bottom: 6px;"></div>
               <p style="margin: 0; font-size: 10px; font-weight: 700; color: #0b427b; text-transform: uppercase; letter-spacing: 0.08em; font-family: sans-serif;">Authorized Signature</p>
               <p style="margin: 1px 0 0 0; font-size: 8.5px; color: #8a7355; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">Substring Technologies</p>
