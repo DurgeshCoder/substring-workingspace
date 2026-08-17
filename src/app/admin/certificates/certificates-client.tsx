@@ -18,7 +18,8 @@ import {
   CheckSquare,
   Square,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -103,6 +104,16 @@ export default function CertificatesClient({ initialCertificates }: Certificates
   // Modal / Preview states
   const [selectedCert, setSelectedCert] = useState<CertificateData | null>(null);
   const [csvPreviewData, setCsvPreviewData] = useState<ParsedCSVRow[] | null>(null);
+  
+  // Add Certificate form states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+  const [formName, setFormName] = useState('');
+  const [formStudentId, setFormStudentId] = useState('');
+  const [formCourse, setFormCourse] = useState('MERN STACK');
+  const [formBatchId, setFormBatchId] = useState('');
+  const [formFromDate, setFormFromDate] = useState('');
+  const [formToDate, setFormToDate] = useState('');
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [certToDelete, setCertToDelete] = useState<string | null>(null);
@@ -252,6 +263,46 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName || !formStudentId || !formFromDate || !formToDate) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    setIsFormSubmitting(true);
+    try {
+      const payload = [{
+        studentId: formStudentId.trim(),
+        name: formName.trim(),
+        fromDate: new Date(formFromDate).toISOString(),
+        toDate: new Date(formToDate).toISOString(),
+        course: formCourse.trim() || 'MERN STACK',
+        batchId: formBatchId.trim() || ''
+      }];
+
+      const res = await createCertificates(payload);
+      if (res.success) {
+        toast.success('Certificate added successfully.');
+        setIsAddModalOpen(false);
+        setFormName('');
+        setFormStudentId('');
+        setFormCourse('MERN STACK');
+        setFormBatchId('');
+        setFormFromDate('');
+        setFormToDate('');
+        window.location.reload();
+      } else {
+        toast.error(res.error || 'Failed to add certificate.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('An error occurred while creating the certificate.');
+    } finally {
+      setIsFormSubmitting(false);
     }
   };
 
@@ -743,6 +794,14 @@ export default function CertificatesClient({ initialCertificates }: Certificates
           />
           
           <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-violet-600 hover:bg-violet-700 text-white font-medium text-xs px-4 py-2 rounded-xl transition duration-200 cursor-pointer shadow-md shadow-violet-600/10 mr-2"
+          >
+            <Plus className="w-3.5 h-3.5 mr-2" />
+            Add Certificate
+          </Button>
+
+          <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs px-4 py-2 rounded-xl transition duration-200 cursor-pointer shadow-md shadow-indigo-600/10"
@@ -1165,6 +1224,113 @@ export default function CertificatesClient({ initialCertificates }: Certificates
           )}
         </CardContent>
       </Card>
+
+      {/* Add Certificate Modal */}
+      {isAddModalOpen && (
+        <Modal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          title="Add New Certificate"
+          className="max-w-xl sm:max-w-xl w-full bg-card border-border text-foreground"
+        >
+          <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">Student Name <span className="text-rose-500">*</span></label>
+              <Input
+                placeholder="Enter student's full name"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                required
+                className="h-9 text-xs rounded-xl bg-muted/40 border-border focus-visible:ring-indigo-500"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground">Student ID / Registration ID <span className="text-rose-500">*</span></label>
+              <Input
+                placeholder="Enter Student Registration ID (e.g. SUBST033)"
+                value={formStudentId}
+                onChange={(e) => setFormStudentId(e.target.value)}
+                required
+                className="h-9 text-xs rounded-xl bg-muted/40 border-border focus-visible:ring-indigo-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Course / Training <span className="text-rose-500">*</span></label>
+                <Input
+                  placeholder="Course Name (e.g. MERN STACK)"
+                  value={formCourse}
+                  onChange={(e) => setFormCourse(e.target.value)}
+                  required
+                  className="h-9 text-xs rounded-xl bg-muted/40 border-border focus-visible:ring-indigo-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Batch ID</label>
+                <Input
+                  placeholder="Optional Batch ID"
+                  value={formBatchId}
+                  onChange={(e) => setFormBatchId(e.target.value)}
+                  className="h-9 text-xs rounded-xl bg-muted/40 border-border focus-visible:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">From Date <span className="text-rose-500">*</span></label>
+                <Input
+                  type="date"
+                  value={formFromDate}
+                  onChange={(e) => setFormFromDate(e.target.value)}
+                  required
+                  className="h-9 text-xs rounded-xl bg-muted/40 border-border focus-visible:ring-indigo-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">To Date <span className="text-rose-500">*</span></label>
+                <Input
+                  type="date"
+                  value={formToDate}
+                  onChange={(e) => setFormToDate(e.target.value)}
+                  required
+                  className="h-9 text-xs rounded-xl bg-muted/40 border-border focus-visible:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
+              <Button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                variant="outline"
+                className="text-xs font-semibold cursor-pointer rounded-xl"
+                disabled={isFormSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl cursor-pointer"
+                disabled={isFormSubmitting}
+              >
+                {isFormSubmitting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Create Certificate'
+                )}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* Preview Modal */}
       {selectedCert && (
