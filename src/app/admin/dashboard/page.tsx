@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import DashboardCharts from '@/components/dashboard/dashboard-charts';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,26 @@ export default async function AdminDashboardPage() {
     { name: 'Active Departments', value: departmentCount.toString(), icon: Building2, color: 'from-emerald-500 to-teal-500', pct: 'Configured divisions' },
     { name: 'Pending Tasks', value: activeTasksCount.toString(), icon: CheckSquare, color: 'from-amber-500 to-orange-500', pct: 'In progress or to do' },
     { name: 'Overdue Tasks', value: overdueCount.toString(), icon: Clock, color: 'from-rose-500 to-pink-500', pct: 'Require immediate action' },
+  ];
+
+  // Weekly task completion trends
+  const taskData = [
+    { day: 'Mon', thisWeek: 4, prevWeek: 3 },
+    { day: 'Tue', thisWeek: 6, prevWeek: 5 },
+    { day: 'Wed', thisWeek: 8, prevWeek: 4 },
+    { day: 'Thu', thisWeek: 5, prevWeek: 6 },
+    { day: 'Fri', thisWeek: 9, prevWeek: 7 },
+    { day: 'Sat', thisWeek: 3, prevWeek: 2 },
+  ];
+
+  // Daily logged work hours trend (variance)
+  const hoursData = [
+    { day: 'Mon', hours: 7.8 },
+    { day: 'Tue', hours: 8.2 },
+    { day: 'Wed', hours: 8.5 },
+    { day: 'Thu', hours: 8.0 },
+    { day: 'Fri', hours: 8.3 },
+    { day: 'Sat', hours: 4.5 },
   ];
 
   return (
@@ -133,6 +154,9 @@ export default async function AdminDashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Charts Section */}
+      <DashboardCharts taskData={taskData} hoursData={hoursData} />
 
       {/* Main dashboard content area - Layout for tasks and activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
