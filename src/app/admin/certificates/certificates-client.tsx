@@ -558,6 +558,16 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     tempDiv.innerHTML = getCertificateHTML(cert);
     document.body.appendChild(tempDiv);
 
+    // Disable all styles temporarily to avoid html2canvas parsing errors for modern CSS functions like "lab()"
+    const disabledSheets: any[] = [];
+    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+    styleTags.forEach((tag: any) => {
+      if (tag.sheet) {
+        disabledSheets.push({ tag, original: tag.sheet.disabled });
+        tag.sheet.disabled = true;
+      }
+    });
+
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
       
@@ -593,6 +603,10 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       
       return pdf.output('blob');
     } finally {
+      // Re-enable stylesheets
+      disabledSheets.forEach(({ tag, original }) => {
+        if (tag.sheet) tag.sheet.disabled = original;
+      });
       document.body.removeChild(tempDiv);
     }
   };
@@ -605,6 +619,16 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     tempDiv.style.top = '-9999px';
     tempDiv.innerHTML = getCertificateHTML(cert);
     document.body.appendChild(tempDiv);
+
+    // Disable all styles temporarily to avoid html2canvas parsing errors for modern CSS functions like "lab()"
+    const disabledSheets: any[] = [];
+    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+    styleTags.forEach((tag: any) => {
+      if (tag.sheet) {
+        disabledSheets.push({ tag, original: tag.sheet.disabled });
+        tag.sheet.disabled = true;
+      }
+    });
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -638,6 +662,10 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         }, 'image/png');
       });
     } finally {
+      // Re-enable stylesheets
+      disabledSheets.forEach(({ tag, original }) => {
+        if (tag.sheet) tag.sheet.disabled = original;
+      });
       document.body.removeChild(tempDiv);
     }
   };
