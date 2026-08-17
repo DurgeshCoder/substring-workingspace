@@ -462,30 +462,20 @@ export default function CertificatesClient({ initialCertificates }: Certificates
             <p style="margin: 0; font-size: 12.5px; font-style: italic; color: #64748b; font-family: 'Georgia', serif;">In recognition of outstanding performance, commitment, and skill acquisition.</p>
           </div>
 
-          <!-- Bottom Layout / Signature / Address / Verification -->
+          <!-- Bottom Layout / Signature / Address -->
           <div style="position: absolute; bottom: 35px; left: 40px; right: 40px; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10;">
             <!-- Address details -->
-            <div style="display: flex; align-items: flex-start; gap: 8px; max-width: 440px; text-align: left;">
+            <div style="display: flex; align-items: flex-start; gap: 8px; max-width: 600px; text-align: left;">
               <svg width="14" height="18" viewBox="0 0 24 24" fill="#b89756" xmlns="http://www.w3.org/2000/svg" style="margin-top: 2px;">
                 <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" />
               </svg>
               <div>
-                <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #64748b; line-height: 1.45; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; letter-spacing: 0.03em;">
-                  Substring Technologies, 633/D/P256 B R Dubey Enclave<br/>
-                  Dhanwa Deva Road Matiyari Chinhat, Lucknow, UP, INDIA 226028 | Phone: +91-9839466732
+                <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #64748b; line-height: 1.5; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; letter-spacing: 0.03em;">
+                  Substring Technologies, 633/D/P256 B R Dubey Enclave,<br/>
+                  Dhanwa Deva Road, Matiyari Chinhat, Lucknow, UP, India 226028<br/>
+                  Phone: +91-9839466732 | Email: contact@substringtechnologies.com
                 </p>
               </div>
-            </div>
-
-            <!-- Modern Security Verification Element -->
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 2px; opacity: 0.85;">
-              <!-- Mini Mock QR Code -->
-              <div style="width: 42px; height: 42px; border: 1.5px solid #d4af37; padding: 2px; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <svg width="100%" height="100%" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M0 0h7v7H0V0zm1 1v5h5V1H1zm11 11h1v1h-1v-1zm0-1h1v1h-1v-1zm-1 0h1v1h-1v-1zm0 2h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1H9v-1zm1 1h1v1h-1v-1zm-2 0h1v1H8v-1zm4-1h1v1h-1v-1zm-1-1h1v1h-1v-1zm2 2h1v1h-1v-1zm0-4h1v1h-1v-1zm-1 0h1v1h-1v-1zm2-1h1v1h-1v-1zm-1-1h1v1H16v-1zm1-1h1v1h-1v-1zm-2 1h1v1h-1v-1zm-1-2h1v1h-1V3zm2 1h1v1h-1V4zm-1 1h1v1h-1V5zm4-5h7v7h-7V0zm1 1v5h5V1h-5zM0 18h7v7H0v-7zm1 1v5h5v-5H1zm17-7h7v7h-7v-7zm1 1v5h5v-5h-5z" fill="#0f2942"/>
-                </svg>
-              </div>
-              <span style="font-family: 'Segoe UI', sans-serif; font-size: 7.5px; font-weight: 700; color: #b89756; letter-spacing: 0.05em; text-transform: uppercase;">Scan to verify</span>
             </div>
 
             <!-- Signature block -->
