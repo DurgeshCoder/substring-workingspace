@@ -378,10 +378,8 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         ">
           <!-- Top Left Logo/Branding -->
           <div style="display: flex; align-items: center; gap: 12px; position: absolute; top: 30px; left: 30px;">
-            <div style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-              <svg width="45" height="45" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M75 10C39.1 10 10 39.1 10 75C10 110.9 39.1 140 75 140C110.9 140 140 110.9 140 75C140 39.1 110.9 10 75 10ZM103.5 61.2C96.2 68.3 84.8 73.1 72.8 73.1H50.5C45.2 73.1 41 68.8 41 63.5C41 58.2 45.2 53.9 50.5 53.9H78.8C86 53.9 92.5 49.3 94.6 42.4C97 34.6 91.2 27 83.1 27H45.5C30.3 27 18 39.3 18 54.5C18 69.7 30.3 82 45.5 82H68.2C80.2 82 91.6 77.2 98.9 70.1C106.2 63 117.6 58.2 129.6 58.2H140C140 68 135 77.2 127 82.5C118 88.5 106.3 90 95.8 90H68.2C56.2 90 44.8 94.8 37.5 101.9C30.2 109 18.8 113.8 6.8 113.8H0C0 103.8 5 94.6 13 89.3C22 83.3 33.7 81.8 44.2 81.8H71.8C83.8 81.8 95.2 77 102.5 69.9C109.8 62.8 121.2 58 133.2 58H140C140 50.2 134.8 43.5 127.8 41.5C120 39.3 111.3 42 107.5 48.5C104.9 53 104.6 57.6 103.5 61.2Z" fill="#0E65A3" />
-              </svg>
+            <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img src="/substring_logo.png" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
             </div>
             <div>
               <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0d233a; letter-spacing: 0.05em; text-transform: uppercase;">Substring Technologies</h3>
@@ -562,6 +560,20 @@ export default function CertificatesClient({ initialCertificates }: Certificates
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
+      
+      // Wait for the logo image to be fully loaded
+      const imgs = Array.from(element.getElementsByTagName('img'));
+      await Promise.all(imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve(); // resolve anyway to avoid blocking
+        });
+      }));
+
+      // Small delay for rendering calculations
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
