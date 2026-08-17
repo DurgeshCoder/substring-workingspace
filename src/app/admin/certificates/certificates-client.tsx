@@ -558,17 +558,11 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     tempDiv.innerHTML = getCertificateHTML(cert);
     document.body.appendChild(tempDiv);
 
-    // Disable all styles temporarily to avoid html2canvas parsing errors for modern CSS functions like "lab()"
-    const disabledSheets: { sheet: CSSStyleSheet; original: boolean }[] = [];
-    for (let i = 0; i < document.styleSheets.length; i++) {
-      try {
-        const sheet = document.styleSheets[i];
-        disabledSheets.push({ sheet, original: sheet.disabled });
-        sheet.disabled = true;
-      } catch (e) {
-        // Ignore cross-origin access issues
-      }
-    }
+    // Temporarily override document.styleSheets to be empty so html2canvas doesn't scan/parse page CSS
+    Object.defineProperty(document, 'styleSheets', {
+      value: [],
+      configurable: true
+    });
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -605,12 +599,8 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       
       return pdf.output('blob');
     } finally {
-      // Re-enable stylesheets
-      disabledSheets.forEach(({ sheet, original }) => {
-        try {
-          sheet.disabled = original;
-        } catch (e) {}
-      });
+      // Restore document.styleSheets
+      delete (document as any).styleSheets;
       document.body.removeChild(tempDiv);
     }
   };
@@ -624,17 +614,11 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     tempDiv.innerHTML = getCertificateHTML(cert);
     document.body.appendChild(tempDiv);
 
-    // Disable all styles temporarily to avoid html2canvas parsing errors for modern CSS functions like "lab()"
-    const disabledSheets: { sheet: CSSStyleSheet; original: boolean }[] = [];
-    for (let i = 0; i < document.styleSheets.length; i++) {
-      try {
-        const sheet = document.styleSheets[i];
-        disabledSheets.push({ sheet, original: sheet.disabled });
-        sheet.disabled = true;
-      } catch (e) {
-        // Ignore cross-origin access issues
-      }
-    }
+    // Temporarily override document.styleSheets to be empty so html2canvas doesn't scan/parse page CSS
+    Object.defineProperty(document, 'styleSheets', {
+      value: [],
+      configurable: true
+    });
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -668,12 +652,8 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         }, 'image/png');
       });
     } finally {
-      // Re-enable stylesheets
-      disabledSheets.forEach(({ sheet, original }) => {
-        try {
-          sheet.disabled = original;
-        } catch (e) {}
-      });
+      // Restore document.styleSheets
+      delete (document as any).styleSheets;
       document.body.removeChild(tempDiv);
     }
   };
