@@ -597,6 +597,70 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     }
   };
 
+  // Convert HTML element to PNG blob
+  const generatePNGBlob = async (cert: CertificateData): Promise<Blob> => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '-9999px';
+    tempDiv.innerHTML = getCertificateHTML(cert);
+    document.body.appendChild(tempDiv);
+
+    try {
+      const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
+      
+      // Wait for the logo image to be fully loaded
+      const imgs = Array.from(element.getElementsByTagName('img'));
+      await Promise.all(imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
+      }));
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      return new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to convert canvas to PNG blob'));
+          }
+        }, 'image/png');
+      });
+    } finally {
+      document.body.removeChild(tempDiv);
+    }
+  };
+
+  const handleDownloadSinglePNG = async (cert: CertificateData) => {
+    try {
+      toast.loading('Generating PNG...', { id: 'png-gen' });
+      const pngBlob = await generatePNGBlob(cert);
+      const url = URL.createObjectURL(pngBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeName = cert.name.replace(/[^a-zA-Z0-9]/g, '_');
+      link.download = `${cert.studentId}_${safeName}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('PNG downloaded successfully!', { id: 'png-gen' });
+    } catch (err: any) {
+      toast.error('PNG download failed: ' + err.message, { id: 'png-gen' });
+    }
+  };
+
   // Bulk Export selected (marked) certificates
   const handleBulkExportSelected = async () => {
     const targets = certificates.filter(c => selectedIds.has(c.id));
@@ -615,25 +679,25 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         const cert = targets[i];
         setZipProgress({ current: i + 1, total: targets.length });
         
-        const pdfBlob = await generatePDFBlob(cert);
+        const pngBlob = await generatePNGBlob(cert);
         
         const safeName = cert.name.replace(/[^a-zA-Z0-9]/g, '_');
-        const filename = `${cert.studentId}_${safeName}.pdf`;
+        const filename = `${cert.studentId}_${safeName}.png`;
         
-        zip.file(filename, pdfBlob);
+        zip.file(filename, pngBlob);
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Bulk_Certificates_${format(new Date(), 'yyyy-MM-dd')}.zip`;
+      link.download = `Bulk_Certificates_PNG_${format(new Date(), 'yyyy-MM-dd')}.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.success(`Successfully exported ${targets.length} marked certificates in a ZIP archive!`);
+      toast.success(`Successfully exported ${targets.length} marked certificates as PNGs in a ZIP archive!`);
     } catch (err: any) {
       console.error(err);
       toast.error('Export failed: ' + err.message);
@@ -1048,6 +1112,15 @@ export default function CertificatesClient({ initialCertificates }: Certificates
                             title="Print / Save PDF"
                           >
                             <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDownloadSinglePNG(cert)}
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg cursor-pointer"
+                            title="Download PNG"
+                          >
+                            <Download className="w-4 h-4" />
                           </Button>
                           <Button
                             onClick={() => setCertToDelete(cert.id)}
