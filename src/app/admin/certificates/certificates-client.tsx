@@ -550,6 +550,7 @@ export default function CertificatesClient({ initialCertificates }: Certificates
   };
 
   // Convert HTML element to PDF blob
+  // Convert HTML element to PDF blob
   const generatePDFBlob = async (cert: CertificateData): Promise<Blob> => {
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
@@ -557,12 +558,6 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     tempDiv.style.top = '-9999px';
     tempDiv.innerHTML = getCertificateHTML(cert);
     document.body.appendChild(tempDiv);
-
-    // Temporarily override document.styleSheets to be empty so html2canvas doesn't scan/parse page CSS
-    Object.defineProperty(document, 'styleSheets', {
-      value: [],
-      configurable: true
-    });
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -584,7 +579,13 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          // Remove all stylesheet link and style elements in the cloned document
+          // so that html2canvas CSS parser doesn't scan or fail on modern properties/colors (lab, oklch)
+          const stylesheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+          stylesheets.forEach(el => el.remove());
+        }
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -599,8 +600,6 @@ export default function CertificatesClient({ initialCertificates }: Certificates
       
       return pdf.output('blob');
     } finally {
-      // Restore document.styleSheets
-      delete (document as any).styleSheets;
       document.body.removeChild(tempDiv);
     }
   };
@@ -613,12 +612,6 @@ export default function CertificatesClient({ initialCertificates }: Certificates
     tempDiv.style.top = '-9999px';
     tempDiv.innerHTML = getCertificateHTML(cert);
     document.body.appendChild(tempDiv);
-
-    // Temporarily override document.styleSheets to be empty so html2canvas doesn't scan/parse page CSS
-    Object.defineProperty(document, 'styleSheets', {
-      value: [],
-      configurable: true
-    });
 
     try {
       const element = tempDiv.querySelector('.certificate-wrapper') as HTMLElement;
@@ -639,7 +632,13 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          // Remove all stylesheet link and style elements in the cloned document
+          // so that html2canvas CSS parser doesn't scan or fail on modern properties/colors (lab, oklch)
+          const stylesheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+          stylesheets.forEach(el => el.remove());
+        }
       });
 
       return new Promise<Blob>((resolve, reject) => {
@@ -652,8 +651,6 @@ export default function CertificatesClient({ initialCertificates }: Certificates
         }, 'image/png');
       });
     } finally {
-      // Restore document.styleSheets
-      delete (document as any).styleSheets;
       document.body.removeChild(tempDiv);
     }
   };
